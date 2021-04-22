@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 3000 3000" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-582.282,-405.452)">
+        <text x="681.936px" y="521.845px" style="font-family:'HelveticaNeue', 'Helvetica Neue';font-size:48px;">https://www<tspan x="943.152px 956.496px " y="521.845px 521.845px ">.s</tspan>muﬂ.or<tspan x="1128.53px 1156.08px " y="521.845px 521.845px ">g/</tspan>version/latest/range/individualNotes/</text>
+    </g>
+    <g transform="matrix(1,0,0,1,4.47648,-0.124558)">
+        <text x="681.936px" y="521.845px" style="font-family:'Georgia', serif;font-size:60px;">Bravura 1.392</text>
+        <text x="681.936px" y="605.845px" style="font-family:'Georgia', serif;font-size:36px;">Bravura 1.392 @ 400 pt</text>
+        <text x="681.936px" y="653.845px" style="font-family:'Georgia', serif;font-size:36px;">looks basically identical to</text>
+        <text x="681.936px" y="701.845px" style="font-family:'Georgia', serif;font-size:36px;">Bravura Text 1.393 @ 500 pt</text>
+        <text x="681.936px" y="749.845px" style="font-family:'Georgia', serif;font-size:36px;">so for the purposes of this comparison</text>
+        <text x="681.936px" y="797.845px" style="font-family:'Georgia', serif;font-size:36px;">I will just use Bravura.</text>
+    </g>
+    <g transform="matrix(1,0,0,1,4.47648,900.619)">
+        <text x="681.936px" y="521.845px" style="font-family:'Georgia', serif;font-size:60px;">Petaluma 1.065</text>
+        <text x="681.936px" y="629.845px" style="font-family:'Georgia', serif;font-size:36px;">Petaluma @ 400 pt</text>
+        <text x="681.936px" y="677.845px" style="font-family:'Georgia', serif;font-size:36px;">looks basically identical to</text>
+        <text x="681.936px" y="725.845px" style="font-family:'Georgia', serif;font-size:36px;">Petaluma Text @ 500 pt</text>
+        <text x="681.936px" y="773.845px" style="font-family:'Georgia', serif;font-size:36px;">so for the purposes of this comparison</text>
+        <text x="681.936px" y="821.845px" style="font-family:'Georgia', serif;font-size:36px;">I will just use Petaluma.</text>
+    </g>
+    <g transform="matrix(1,0,0,1,4.47648,1796.47)">
+        <text x="681.936px" y="521.845px" style="font-family:'Georgia', serif;font-size:60px;">Gonville 18</text>
+        <text x="681.936px" y="629.845px" style="font-family:'Georgia', serif;font-size:36px;">Gonville 18 @ 400 pt</text>
+        <text x="681.936px" y="677.845px" style="font-family:'Georgia', serif;font-size:36px;">It seems like the stems and ﬂags are</text>
+        <text x="681.936px" y="725.845px" style="font-family:'Georgia', serif;font-size:36px;">separate glyphs from the note heads.</text>
+    </g>
+    <g id="Bravura" transform="matrix(1,0,0,1,1089,78.8592)">
+        <text x="390.997px" y="491.141px" style="font-family:'Bravura';font-size:400px;"></text>
+    </g>
+    <g id="Petaluma" transform="matrix(1,0,0,1,1088.6,1039.26)">
+        <text x="390.997px" y="491.141px" style="font-family:'Petaluma';font-size:400px;"></text>
+    </g>
+    <g id="Petaluma1" serif:id="Petaluma" transform="matrix(1,0,0,1,1088.6,1935.11)">
+        <text x="390.997px" y="491.141px" style="font-family:'Gonville-18';font-size:400px;">   </text>
+    </g>
+</svg>

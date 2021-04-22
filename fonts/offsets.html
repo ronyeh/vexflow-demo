@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Offsets</title>
+        <link rel="stylesheet" href="/css/main.css" />
+        <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+        <script src="/js/main.js"></script>
+        <style>
+            #stave {
+                overflow: auto;
+                width: 100%;
+            }
+            svg {
+                background-color: white;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Note Head and Stem Offsets</h1>
+        <div id="app">{{ message }}</div>
+        <div id="stave"></div>
+        <script>
+            const urlParams = new URLSearchParams(window.location.search);
+            let vexVersion = urlParams.get("vex_version");
+            if (!vexVersion) {
+                vexVersion = "prod";
+            }
+            let font = urlParams.get("font");
+            if (!font) {
+                font = "bravura";
+            }
+
+            switch (vexVersion) {
+                case "patched":
+                    addScriptTag("https://unpkg.com/vexflow@3.0.9/releases/vexflow-debug.js?", onVexFlowLoaded);
+                    break;
+                default:
+                    addScriptTag("https://unpkg.com/vexflow@3.0.9/releases/vexflow-debug.js", onVexFlowLoaded);
+                    break;
+            }
+
+            function onVexFlowLoaded() {
+                const VF = Vex.Flow;
+                switch (font) {
+                    case "bravura":
+                    default:
+                        VF.DEFAULT_FONT_STACK = [VF.Fonts.Bravura, VF.Fonts.Gonville, VF.Fonts.Custom];
+                        break;
+                    case "petaluma":
+                        VF.DEFAULT_FONT_STACK = [VF.Fonts.Petaluma, VF.Fonts.Gonville, VF.Fonts.Custom];
+                        break;
+                    case "gonville":
+                        VF.DEFAULT_FONT_STACK = [VF.Fonts.Gonville, VF.Fonts.Bravura, VF.Fonts.Custom];
+                        break;
+                }
+                const f = new VF.Factory({
+                    renderer: { elementId: "stave", width: 2000, height: 600 },
+                });
+
+                const score = f.EasyScore();
+                const system = f.System();
+
+                window.f = f;
+                window.sys = system;
+
+                const v0 = score.voice(score.notes("E5/16, C5/8, E5/q, A4/h, C5/16", { stem: "up" }));
+                const v1 = score.voice(score.notes("D4/16, D4/8, F4/q, D4/h, D4/16", { stem: "down" }));
+                const v2 = score.voice(score.notes("A4/w"));
+
+                system
+                    .addStave({
+                        voices: [v0, v1, v2],
+                    })
+                    .addClef("treble")
+                    .addTimeSignature("4/4");
+
+                f.context.scale(4, 4);
+                f.draw();
+            }
+
+            var app = new Vue({
+                el: "#app",
+                data: {
+                    message: `VexFlow Version: [${vexVersion}], Font: [${font}]`,
+                },
+            });
+        </script>
+    </body>
+</html>
