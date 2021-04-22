@@ -6,7 +6,7 @@
         <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
         <script src="/js/main.js"></script>
         <style>
-            #stave {
+            .stave-container {
                 overflow: auto;
                 width: 100%;
             }
@@ -29,8 +29,10 @@
             </div>
             <div>Backend: <button v-on:click="reloadPageWithSVGBackend()">SVG</button> <button v-on:click="reloadPageWithCanvasBackend()">CANVAS</button></div>
             <br />
-            <div v-if="isSVGType()" id="stave" v-on:scroll="saveScrollOffsets"></div>
-            <canvas v-else id="stave" v-on:scroll="saveScrollOffsets"></canvas>
+            <div class="stave-container" v-on:scroll="saveScrollOffsets">
+                <div v-if="isSVGType()" id="stave"></div>
+                <canvas v-else id="stave"></canvas>
+            </div>
         </div>
         <br />
         <script>
@@ -162,7 +164,7 @@
             // Save the offsetX and offsetY information to the browser's address bar.
             // This allows us to transfer the offsetX / offsetY parameters to a different page, so we can align the values properly.
             function saveScrollOffsets() {
-                let x = document.querySelector("#stave").scrollLeft;
+                let x = document.querySelector(".stave-container").scrollLeft;
                 let y = window.scrollY;
                 console.log(y);
                 let newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?vex_version=${vexVersion}&font=${font}&scale=${scale}&context_type=${contextType}&offsetX=${x}&offsetY=${y}`;
@@ -171,7 +173,7 @@
 
             function restoreScrollOffsets() {
                 if (offsetX > 0) {
-                    document.querySelector("#stave").scrollLeft = offsetX;
+                    document.querySelector(".stave-container").scrollLeft = offsetX;
                 }
                 if (offsetY > 0) {
                     window.scroll(0, offsetY);
