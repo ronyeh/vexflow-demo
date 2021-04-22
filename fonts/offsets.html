@@ -13,33 +13,51 @@
             svg {
                 background-color: white;
             }
+            canvas {
+                background-color: white;
+            }
         </style>
     </head>
     <body>
         <h1>Note Head and Stem Offsets</h1>
-        <div id="app">{{ message }}</div>
-        <div id="stave"></div>
+        <div id="app">
+            <div>{{ info }}</div>
+            <div>
+                Scale: <button v-on:click="reloadPageWithScale(1)">1X</button> <button v-on:click="reloadPageWithScale(2)">2X</button> <button v-on:click="reloadPageWithScale(4)">4X</button>
+                <button v-on:click="reloadPageWithScale(8)">8X</button>
+                <button v-on:click="reloadPageWithScale(16)">16X</button>
+            </div>
+            <div>Backend: <button v-on:click="reloadPageWithSVGBackend()">SVG</button> <button v-on:click="reloadPageWithCanvasBackend()">CANVAS</button></div>
+            <br />
+            <div v-if="isSVGType()" id="stave"></div>
+            <canvas v-else id="stave"></canvas>
+        </div>
+        <br />
         <script>
             const urlParams = new URLSearchParams(window.location.search);
-            let vexVersion = urlParams.get("vex_version");
+            let vexVersion = urlParams.get("vex_version"); // vexflow.version.number || patched
             if (!vexVersion) {
-                vexVersion = "prod";
+                vexVersion = "3.0.9";
             }
-            let font = urlParams.get("font");
+            let font = urlParams.get("font"); // bravura || petaluma || gonville
             if (!font) {
                 font = "bravura";
             }
-
-            switch (vexVersion) {
-                case "patched":
-                    addScriptTag("https://unpkg.com/vexflow@3.0.9/releases/vexflow-debug.js?", onVexFlowLoaded);
-                    break;
-                default:
-                    addScriptTag("https://unpkg.com/vexflow@3.0.9/releases/vexflow-debug.js", onVexFlowLoaded);
-                    break;
+            let contextType = urlParams.get("context_type"); // svg | canvas
+            if (!contextType) {
+                contextType = "svg";
+            }
+            let scale = urlParams.get("scale"); // 1, 2, 4, 8, 16
+            scale = parseInt(scale);
+            if (isNaN(scale) || scale < 1) {
+                scale = 4;
             }
 
             function onVexFlowLoaded() {
+                drawStave();
+            }
+
+            function drawStave() {
                 const VF = Vex.Flow;
                 switch (font) {
                     case "bravura":
@@ -54,7 +72,7 @@
                         break;
                 }
                 const f = new VF.Factory({
-                    renderer: { elementId: "stave", width: 2000, height: 600 },
+                    renderer: { elementId: "stave", width: 520*scale, height: 150*scale, backend: getBackendType() },
                 });
 
                 const score = f.EasyScore();
@@ -63,27 +81,62 @@
                 window.f = f;
                 window.sys = system;
 
-                const v0 = score.voice(score.notes("E5/16, C5/8, E5/q, A4/h, C5/16", { stem: "up" }));
-                const v1 = score.voice(score.notes("D4/16, D4/8, F4/q, D4/h, D4/16", { stem: "down" }));
-                const v2 = score.voice(score.notes("A4/w"));
+                const v0 = score.voice(score.notes("E5/16, C5/8, G5/q, C5/h, C5/32, C5/32", { stem: "up" }));
+                const v1 = score.voice(score.notes("F4/16, A4/8, D4/q, A4/h, D4/32, D4/32", { stem: "down" }));
 
                 system
                     .addStave({
-                        voices: [v0, v1, v2],
+                        voices: [v0, v1],
                     })
                     .addClef("treble")
                     .addTimeSignature("4/4");
 
-                f.context.scale(4, 4);
+                f.context.scale(scale, scale);
                 f.draw();
             }
 
-            var app = new Vue({
+            function isSVGType() {
+                return contextType === "svg";
+            }
+
+            function getBackendType() {
+                const VF = Vex.Flow;
+                if (isSVGType()) {
+                    return VF.Renderer.Backends.SVG;
+                } else {
+                    return VF.Renderer.Backends.CANVAS;
+                }
+            }
+
+            let app = new Vue({
                 el: "#app",
                 data: {
-                    message: `VexFlow Version: [${vexVersion}], Font: [${font}]`,
+                    info: `VexFlow: ${vexVersion}, Font: ${font}, Scale: ${scale}X, Context: ${contextType}`,
+                },
+                mounted: () => {
+                    switch (vexVersion) {
+                        case "patched":
+                            addScriptTag("/js/vexflow-patched.js", onVexFlowLoaded);
+                            break;
+                        default:
+                            // 3.0.9
+                            addScriptTag("https://unpkg.com/vexflow@3.0.9/releases/vexflow-debug.js", onVexFlowLoaded);
+                            break;
+                    }
                 },
             });
+
+            function reloadPageWithScale(s) {
+                window.location.href = window.location.pathname + `?vex_version=${vexVersion}&font=${font}&scale=${s}&context_type=${contextType}`;
+            }
+
+            function reloadPageWithSVGBackend() {
+                window.location.href = window.location.pathname + `?vex_version=${vexVersion}&font=${font}&scale=${scale}&context_type=svg`;
+            }
+
+            function reloadPageWithCanvasBackend() {
+                window.location.href = window.location.pathname + `?vex_version=${vexVersion}&font=${font}&scale=${scale}&context_type=canvas`;
+            }
         </script>
     </body>
 </html>
