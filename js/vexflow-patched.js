@@ -7275,7 +7275,12 @@ var BravuraMetrics = {
         offsetYBaseStemDown: 4
       },
       noteheadBlack: {
+        offsetYBaseStemUp: -2,
         offsetYBaseStemDown: 2
+      },
+      noteheadHalf: {
+        offsetYBaseStemUp: -2.5,
+        offsetYBaseStemDown: 2.6
       },
       noteheadSquareWhite: {
         offsetYBaseStemDown: -5,
