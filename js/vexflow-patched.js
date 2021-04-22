@@ -8511,9 +8511,16 @@ var GonvilleMetrics = {
         offsetYBaseStemUp: -4,
         offsetYBaseStemDown: 4
       },
-      noteheadBlack: {
-        offsetYBaseStemDown: 2
+      noteheadHalf: {
+        offsetYBaseStemUp: -2,
+        offsetYBaseStemDown: 2,
       },
+      noteheadBlack: {
+        offsetYBaseStemUp: -2,
+        offsetYBaseStemDown: 2,
+        offsetYTopStemUp: -1,
+        offsetYTopStemDown: -1
+    },
       noteheadSquareWhite: {
         offsetYBaseStemDown: -5,
         offsetYBaseStemUp: 5
