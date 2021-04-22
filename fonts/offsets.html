@@ -3,7 +3,7 @@
     <head>
         <title>Offsets</title>
         <link rel="stylesheet" href="/css/main.css" />
-        <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+        <script src="https://unpkg.com/vue@3.0.11/dist/vue.global.prod.js"></script>
         <script src="/js/main.js"></script>
         <style>
             .stave-container {
@@ -23,162 +23,15 @@
         <div id="app">
             <div>{{ info }}</div>
             <div>
-                Scale: <button v-on:click="reloadPageWithScale(1)">1X</button> <button v-on:click="reloadPageWithScale(2)">2X</button> <button v-on:click="reloadPageWithScale(4)">4X</button>
-                <button v-on:click="reloadPageWithScale(8)">8X</button>
-                <button v-on:click="reloadPageWithScale(16)">16X</button>
+                Scale: <button @click="reloadWithScale(1)">1x</button><button @click="reloadWithScale(2)">2x</button><button @click="reloadWithScale(4)">4x</button><button @click="reloadWithScale(8)">8x</button
+                ><button @click="reloadWithScale(16)">16x</button><spacer></spacer>Backend: <button @click="reloadWithBackend('svg')">SVG</button><button @click="reloadWithBackend('canvas')">CANVAS</button><spacer></spacer>Visual Debug:
+                <button @click="reloadWithVisualDebug(true)">ON</button><button @click="reloadWithVisualDebug(false)">OFF</button>
             </div>
-            <div>Backend: <button v-on:click="reloadPageWithSVGBackend()">SVG</button> <button v-on:click="reloadPageWithCanvasBackend()">CANVAS</button></div>
             <br />
-            <div class="stave-container" v-on:scroll="saveScrollOffsets">
-                <div v-if="isSVGType()" id="stave"></div>
-                <canvas v-else id="stave"></canvas>
+            <div class="stave-container" @scroll="saveScrollOffsets">
+                <stave></stave>
             </div>
         </div>
-        <br />
-        <script>
-            // Handle the query params.
-            const urlParams = new URLSearchParams(window.location.search);
-            let vexVersion = urlParams.get("vex_version"); // vexflow.version.number || patched
-            if (!vexVersion) {
-                vexVersion = "3.0.9";
-            }
-            let font = urlParams.get("font"); // bravura || petaluma || gonville
-            if (!font) {
-                font = "bravura";
-            }
-            let contextType = urlParams.get("context_type"); // svg | canvas
-            if (!contextType) {
-                contextType = "svg";
-            }
-            let scale = parseInt(urlParams.get("scale")); // 1, 2, 4, 8, 16
-            if (isNaN(scale) || scale < 1) {
-                scale = 4;
-            }
-            let offsetX = parseInt(urlParams.get("offsetX"));
-            if (isNaN(offsetX) || offsetX < 0) {
-                offsetX = 0;
-            }
-            let offsetY = parseInt(urlParams.get("offsetY"));
-            if (isNaN(offsetY) || offsetY < 0) {
-                offsetY = 0;
-            }
-
-            function onVexFlowLoaded() {
-                drawStave();
-                restoreScrollOffsets();
-            }
-
-            function drawStave() {
-                const VF = Vex.Flow;
-                switch (font) {
-                    case "bravura":
-                    default:
-                        VF.DEFAULT_FONT_STACK = [VF.Fonts.Bravura, VF.Fonts.Gonville, VF.Fonts.Custom];
-                        break;
-                    case "petaluma":
-                        VF.DEFAULT_FONT_STACK = [VF.Fonts.Petaluma, VF.Fonts.Gonville, VF.Fonts.Custom];
-                        break;
-                    case "gonville":
-                        VF.DEFAULT_FONT_STACK = [VF.Fonts.Gonville, VF.Fonts.Bravura, VF.Fonts.Custom];
-                        break;
-                }
-                const f = new VF.Factory({
-                    renderer: { elementId: "stave", width: 520 * scale, height: 150 * scale, backend: getBackendType() },
-                });
-
-                const score = f.EasyScore();
-                const system = f.System();
-
-                window.f = f;
-                window.sys = system;
-
-                const v0 = score.voice(score.notes("E5/16, C5/8, G5/q, C5/h, C5/32, C5/32", { stem: "up" }));
-                const v1 = score.voice(score.notes("F4/16, A4/8, D4/q, A4/h, D4/32, D4/32", { stem: "down" }));
-
-                system
-                    .addStave({
-                        voices: [v0, v1],
-                    })
-                    .addClef("treble")
-                    .addTimeSignature("4/4");
-
-                f.context.scale(scale, scale);
-                f.draw();
-            }
-
-            function isSVGType() {
-                return contextType === "svg";
-            }
-
-            function getBackendType() {
-                const VF = Vex.Flow;
-                if (isSVGType()) {
-                    return VF.Renderer.Backends.SVG;
-                } else {
-                    return VF.Renderer.Backends.CANVAS;
-                }
-            }
-
-            let app = new Vue({
-                el: "#app",
-                data: {
-                    info: `VexFlow: ${vexVersion}, Font: ${font}, Scale: ${scale}X, Context: ${contextType}`,
-                },
-                mounted: () => {
-                    console.log("mounted");
-                    switch (vexVersion) {
-                        case "patched":
-                            addScriptTag("/js/vexflow-patched.js?" + Math.random(), onVexFlowLoaded);
-                            break;
-                        default:
-                            // 3.0.9
-                            addScriptTag("https://unpkg.com/vexflow@3.0.9/releases/vexflow-debug.js", onVexFlowLoaded);
-                            break;
-                    }
-
-                    document.title = "Offsets - " + vexVersion;
-                },
-                created() {
-                    window.addEventListener("scroll", saveScrollOffsets);
-                },
-
-                beforeDestroy() {
-                    // I switched the example from `destroyed` to `beforeDestroy`
-                    // to exercise your mind a bit. This lifecycle method works too.
-                    window.removeEventListener("scroll", saveScrollOffsets);
-                },
-            });
-
-            function reloadPageWithScale(s) {
-                window.location.href = window.location.pathname + `?vex_version=${vexVersion}&font=${font}&scale=${s}&context_type=${contextType}`;
-            }
-
-            function reloadPageWithSVGBackend() {
-                window.location.href = window.location.pathname + `?vex_version=${vexVersion}&font=${font}&scale=${scale}&context_type=svg`;
-            }
-
-            function reloadPageWithCanvasBackend() {
-                window.location.href = window.location.pathname + `?vex_version=${vexVersion}&font=${font}&scale=${scale}&context_type=canvas`;
-            }
-
-            // Save the offsetX and offsetY information to the browser's address bar.
-            // This allows us to transfer the offsetX / offsetY parameters to a different page, so we can align the values properly.
-            function saveScrollOffsets() {
-                let x = document.querySelector(".stave-container").scrollLeft;
-                let y = window.scrollY;
-                console.log(y);
-                let newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?vex_version=${vexVersion}&font=${font}&scale=${scale}&context_type=${contextType}&offsetX=${x}&offsetY=${y}`;
-                window.history.replaceState({ path: newurl }, "", newurl);
-            }
-
-            function restoreScrollOffsets() {
-                if (offsetX > 0) {
-                    document.querySelector(".stave-container").scrollLeft = offsetX;
-                }
-                if (offsetY > 0) {
-                    window.scroll(0, offsetY);
-                }
-            }
-        </script>
+        <script src="offsets.js"></script>
     </body>
 </html>
