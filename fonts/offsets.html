@@ -29,11 +29,12 @@
             </div>
             <div>Backend: <button v-on:click="reloadPageWithSVGBackend()">SVG</button> <button v-on:click="reloadPageWithCanvasBackend()">CANVAS</button></div>
             <br />
-            <div v-if="isSVGType()" id="stave"></div>
-            <canvas v-else id="stave"></canvas>
+            <div v-if="isSVGType()" id="stave" v-on:scroll="saveScrollOffsets"></div>
+            <canvas v-else id="stave" v-on:scroll="saveScrollOffsets"></canvas>
         </div>
         <br />
         <script>
+            // Handle the query params.
             const urlParams = new URLSearchParams(window.location.search);
             let vexVersion = urlParams.get("vex_version"); // vexflow.version.number || patched
             if (!vexVersion) {
@@ -47,14 +48,22 @@
             if (!contextType) {
                 contextType = "svg";
             }
-            let scale = urlParams.get("scale"); // 1, 2, 4, 8, 16
-            scale = parseInt(scale);
+            let scale = parseInt(urlParams.get("scale")); // 1, 2, 4, 8, 16
             if (isNaN(scale) || scale < 1) {
                 scale = 4;
+            }
+            let offsetX = parseInt(urlParams.get("offsetX"));
+            if (isNaN(offsetX) || offsetX < 0) {
+                offsetX = 0;
+            }
+            let offsetY = parseInt(urlParams.get("offsetY"));
+            if (isNaN(offsetY) || offsetY < 0) {
+                offsetY = 0;
             }
 
             function onVexFlowLoaded() {
                 drawStave();
+                restoreScrollOffsets();
             }
 
             function drawStave() {
@@ -72,7 +81,7 @@
                         break;
                 }
                 const f = new VF.Factory({
-                    renderer: { elementId: "stave", width: 520*scale, height: 150*scale, backend: getBackendType() },
+                    renderer: { elementId: "stave", width: 520 * scale, height: 150 * scale, backend: getBackendType() },
                 });
 
                 const score = f.EasyScore();
@@ -114,9 +123,10 @@
                     info: `VexFlow: ${vexVersion}, Font: ${font}, Scale: ${scale}X, Context: ${contextType}`,
                 },
                 mounted: () => {
+                    console.log("mounted");
                     switch (vexVersion) {
                         case "patched":
-                            addScriptTag("/js/vexflow-patched.js", onVexFlowLoaded);
+                            addScriptTag("/js/vexflow-patched.js?" + Math.random(), onVexFlowLoaded);
                             break;
                         default:
                             // 3.0.9
@@ -125,6 +135,15 @@
                     }
 
                     document.title = "Offsets - " + vexVersion;
+                },
+                created() {
+                    window.addEventListener("scroll", saveScrollOffsets);
+                },
+
+                beforeDestroy() {
+                    // I switched the example from `destroyed` to `beforeDestroy`
+                    // to exercise your mind a bit. This lifecycle method works too.
+                    window.removeEventListener("scroll", saveScrollOffsets);
                 },
             });
 
@@ -138,6 +157,25 @@
 
             function reloadPageWithCanvasBackend() {
                 window.location.href = window.location.pathname + `?vex_version=${vexVersion}&font=${font}&scale=${scale}&context_type=canvas`;
+            }
+
+            // Save the offsetX and offsetY information to the browser's address bar.
+            // This allows us to transfer the offsetX / offsetY parameters to a different page, so we can align the values properly.
+            function saveScrollOffsets() {
+                let x = document.querySelector("#stave").scrollLeft;
+                let y = window.scrollY;
+                console.log(y);
+                let newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?vex_version=${vexVersion}&font=${font}&scale=${scale}&context_type=${contextType}&offsetX=${x}&offsetY=${y}`;
+                window.history.replaceState({ path: newurl }, "", newurl);
+            }
+
+            function restoreScrollOffsets() {
+                if (offsetX > 0) {
+                    document.querySelector("#stave").scrollLeft = offsetX;
+                }
+                if (offsetY > 0) {
+                    window.scroll(0, offsetY);
+                }
             }
         </script>
     </body>
