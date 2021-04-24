@@ -5088,7 +5088,7 @@ var stave_1 = __webpack_require__(/*! ./stave */ "./src/stave.ts");
 var stavetie_1 = __webpack_require__(/*! ./stavetie */ "./src/stavetie.js");
 var staveline_1 = __webpack_require__(/*! ./staveline */ "./src/staveline.js");
 var stavenote_1 = __webpack_require__(/*! ./stavenote */ "./src/stavenote.ts");
-var glyphnote_1 = __webpack_require__(/*! ./glyphnote */ "./src/glyphnote.js");
+var glyphnote_1 = __webpack_require__(/*! ./glyphnote */ "./src/glyphnote.ts");
 var repeatnote_1 = __webpack_require__(/*! ./repeatnote */ "./src/repeatnote.ts");
 var staveconnector_1 = __webpack_require__(/*! ./staveconnector */ "./src/staveconnector.js");
 var system_1 = __webpack_require__(/*! ./system */ "./src/system.js");
@@ -10466,11 +10466,11 @@ exports.GonvilleMetrics = {
         padding: 12,
     },
     clef: {
-        default: {
+        'default': {
             point: 40,
-            width: 26,
+            width: 26
         },
-        small: {
+        'small': {
             point: 32,
             width: 20,
         },
@@ -10490,7 +10490,7 @@ exports.GonvilleMetrics = {
                         line: -0.4,
                         shiftX: 8,
                     },
-                },
+                }
             },
             '8vb': {
                 smuflCode: 'timeSig8',
@@ -10503,7 +10503,7 @@ exports.GonvilleMetrics = {
                     bass: {
                         line: 4,
                         shiftX: 1,
-                    },
+                    }
                 },
                 small: {
                     point: 18,
@@ -10514,9 +10514,9 @@ exports.GonvilleMetrics = {
                     bass: {
                         line: 3.5,
                         shiftX: 0.5,
-                    },
-                },
-            },
+                    }
+                }
+            }
         },
         // May not need these anymore
         lineCount: {
@@ -10525,15 +10525,15 @@ exports.GonvilleMetrics = {
             '6': { point: 40, shiftY: 1 },
             '5': { point: 30, shiftY: -6 },
             '4': { point: 23, shiftY: -12 },
-        },
+        }
     },
     pedalMarking: {
         up: {
-            point: 40,
+            point: 40
         },
         down: {
-            point: 40,
-        },
+            point: 40
+        }
     },
     tremolo: {
         default: {
@@ -10551,7 +10551,7 @@ exports.GonvilleMetrics = {
             offsetYStemDown: -21,
             offsetXStemUp: 6,
             offsetXStemDown: -2,
-        },
+        }
     },
     // These are for numeric digits, such as in time signatures
     digits: {
@@ -10593,36 +10593,37 @@ exports.GonvilleMetrics = {
             noteheadBlack: {
                 offsetYBaseStemUp: -2,
                 offsetYBaseStemDown: 2,
-                offsetYTopStemUp: -1,
-                offsetYTopStemDown: -0.33,
             },
             noteheadSquareWhite: {
                 offsetYBaseStemDown: -5,
                 offsetYBaseStemUp: 5,
-            },
-        },
+            }
+        }
     },
     glyphs: {
+        flag: {
+            shiftX: -0.16,
+        },
         textNote: {
             point: 40,
             default: {},
             ornamentTrill: {
                 shiftX: -5,
                 shiftY: 4,
-            },
+            }
         },
         noteHead: {
             custom: {
-                noteheadDiamondWholeStemUp: {
+                'noteheadDiamondWholeStemUp': {
                     shiftX: -6,
                 },
-                noteheadCircleXStemUp: {
+                'noteheadCircleXStemUp': {
                     shiftX: -1.5,
                 },
-                noteheadXWholeStemUp: {
+                'noteheadXWholeStemUp': {
                     shiftX: -5,
                 },
-                noteheadTriangleUpWholeStemUp: {
+                'noteheadTriangleUpWholeStemUp': {
                     shiftX: -6,
                 },
             },
@@ -10635,92 +10636,92 @@ exports.GonvilleMetrics = {
                 lowerKerningText: ['D', 'F', 'P', 'T', 'V', 'Y'],
                 upperKerningText: ['A', 'L'],
                 spacing: 100,
-                superSubRatio: 0.66,
+                superSubRatio: 0.66
             },
             csymDiminished: {
                 scale: 0.8,
                 leftSideBearing: 0,
                 advanceWidth: 506,
-                yOffset: 0,
+                yOffset: 0
             },
             csymHalfDiminished: {
                 scale: 0.8,
                 leftSideBearing: -32,
                 advanceWidth: 506,
-                yOffset: 0,
+                yOffset: 0
             },
             csymAugmented: {
                 scale: 1,
                 leftSideBearing: 0,
                 advanceWidth: 530,
-                yOffset: 0,
+                yOffset: 0
             },
             csymParensLeftTall: {
                 scale: 0.8,
                 leftSideBearing: 0,
                 advanceWidth: 155,
-                yOffset: 250,
+                yOffset: 250
             },
             csymParensRightTall: {
                 scale: 0.8,
                 leftSideBearing: -40,
                 advanceWidth: 189,
-                yOffset: 250,
+                yOffset: 250
             },
             csymBracketLeftTall: {
                 scale: 0.8,
                 leftSideBearing: 0,
                 advanceWidth: 328,
-                yOffset: 0,
+                yOffset: 0
             },
             csymBracketRightTall: {
                 scale: 0.8,
                 leftSideBearing: 1,
                 advanceWidth: 600,
-                yOffset: 0,
+                yOffset: 0
             },
             csymParensLeftVeryTall: {
                 scale: 0.9,
                 leftSideBearing: 0,
                 advanceWidth: 121,
-                yOffset: 350,
+                yOffset: 350
             },
             csymParensRightVeryTall: {
                 scale: 0.9,
                 leftSideBearing: 50,
                 advanceWidth: 111,
-                yOffset: 350,
+                yOffset: 350
             },
             csymDiagonalArrangementSlash: {
                 scale: 0.6,
                 leftSideBearing: -1,
                 advanceWidth: 990,
-                yOffset: 0,
+                yOffset: 0
             },
             csymMinor: {
                 scale: 0.8,
                 leftSideBearing: 0,
                 advanceWidth: 482,
-                yOffset: 0,
+                yOffset: 0
             },
             csymMajorSeventh: {
                 scale: 0.9,
                 leftSideBearing: 200,
                 yOffset: 0,
-                advanceWidth: 600,
+                advanceWidth: 600
             },
             accidentalSharp: {
                 scale: 0.75,
                 leftSideBearing: 40,
                 advanceWidth: 250,
-                yOffset: -402,
+                yOffset: -402
             },
             accidentalFlat: {
                 scale: 0.95,
                 leftSideBearing: -50,
                 advanceWidth: 208,
-                yOffset: -184,
-            },
+                yOffset: -184
+            }
         },
         jazzOrnaments: {
             brassScoop: {
@@ -10728,80 +10729,80 @@ exports.GonvilleMetrics = {
                 xOffset: -12,
                 yOffset: 0,
                 stemUpYOffset: 0,
-                reportedWidth: 10,
+                reportedWidth: 10
             },
             brassDoitMedium: {
                 scale: 1.0,
                 xOffset: 16,
                 yOffset: 0,
                 stemUpYOffset: 0,
-                reportedWidth: 5,
+                reportedWidth: 5
             },
             brassFallLipShort: {
                 scale: 1.0,
                 xOffset: 17,
                 yOffset: 0,
                 stemUpYOffset: 0,
-                reportedWidth: 5,
+                reportedWidth: 5
             },
             brassLiftMedium: {
                 scale: 1.0,
                 xOffset: 16,
                 yOffset: 5,
                 stemUpYOffset: 0,
-                reportedWidth: 5,
+                reportedWidth: 5
             },
             brassFallRoughMedium: {
                 scale: 1.0,
                 xOffset: 16,
                 yOffset: 28,
                 stemUpYOffset: 0,
-                reportedWidth: 5,
+                reportedWidth: 5
             },
             brassBend: {
                 scale: 1.0,
                 xOffset: 2,
                 yOffset: -8,
                 stemUpYOffset: 24,
-                reportedWidth: 5,
+                reportedWidth: 5
             },
             brassMuteClosed: {
                 scale: 1.0,
                 xOffset: 3,
                 yOffset: -9,
                 stemUpYOffset: 24,
-                reportedWidth: 5,
+                reportedWidth: 5
             },
             brassMuteOpen: {
                 scale: 1.0,
                 xOffset: 3,
                 yOffset: -7,
                 stemUpYOffset: 25,
-                reportedWidth: 5,
+                reportedWidth: 5
             },
             brassFlip: {
                 scale: 1.0,
                 xOffset: 10,
                 yOffset: -4,
                 stemUpYOffset: 0,
-                reportedWidth: 5,
+                reportedWidth: 5
             },
             brassJazzTurn: {
                 scale: 1.0,
                 xOffset: 6,
                 yOffset: -4,
                 stemUpYOffset: 0,
-                reportedWidth: 5,
+                reportedWidth: 5
             },
             brassSmear: {
                 scale: 1.0,
                 xOffset: 10,
                 yOffset: -4,
                 stemUpYOffset: 0,
-                reportedWidth: 5,
+                reportedWidth: 5
             },
-        },
-    },
+        }
+    }
 };
 
 
@@ -17918,9 +17919,9 @@ exports.Glyph = Glyph;
 
 /***/ }),
 
-/***/ "./src/glyphnote.js":
+/***/ "./src/glyphnote.ts":
 /*!**************************!*\
-  !*** ./src/glyphnote.js ***!
+  !*** ./src/glyphnote.ts ***!
   \**************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -17956,6 +17957,7 @@ var __assign = (this && this.__assign) || function () {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GlyphNote = void 0;
+var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var note_1 = __webpack_require__(/*! ./note */ "./src/note.ts");
 var GlyphNote = /** @class */ (function (_super) {
     __extends(GlyphNote, _super);
@@ -17988,11 +17990,14 @@ var GlyphNote = /** @class */ (function (_super) {
         return this;
     };
     GlyphNote.prototype.draw = function () {
-        this.stave.checkContext();
+        if (!this.stave) {
+            throw new vex_1.Vex.RERR('NoStave', 'No stave attached to this note.');
+        }
+        var ctx = this.stave.checkContext();
         this.setRendered();
         // Context is set when setStave is called on Note
         if (!this.glyph.getContext()) {
-            this.glyph.setContext(this.context);
+            this.glyph.setContext(ctx);
         }
         this.glyph.setStave(this.stave);
         this.glyph.setYShift(this.stave.getYForLine(this.options.line) - this.stave.getYForGlyphs());
@@ -18408,9 +18413,9 @@ exports.GraceNoteGroup = GraceNoteGroup;
 
 /***/ }),
 
-/***/ "./src/gracetabnote.js":
+/***/ "./src/gracetabnote.ts":
 /*!*****************************!*\
-  !*** ./src/gracetabnote.js ***!
+  !*** ./src/gracetabnote.ts ***!
   \*****************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -18441,16 +18446,28 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GraceTabNote = void 0;
-var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var tabnote_1 = __webpack_require__(/*! ./tabnote */ "./src/tabnote.js");
+/** Implements Crace Tab Note. */
 var GraceTabNote = /** @class */ (function (_super) {
     __extends(GraceTabNote, _super);
+    /** Constructor providing a stave note struct */
     function GraceTabNote(note_struct) {
         var _this = _super.call(this, note_struct, false) || this;
         _this.setAttribute('type', 'GraceTabNote');
-        vex_1.Vex.Merge(_this.render_options, {
+        _this.render_options = __assign(__assign({}, _this.render_options), {
             // vertical shift from stave line
             y_shift: 0.3,
             // grace glyph scale
@@ -18468,9 +18485,11 @@ var GraceTabNote = /** @class */ (function (_super) {
         enumerable: false,
         configurable: true
     });
+    /** Returns the category. */
     GraceTabNote.prototype.getCategory = function () {
         return GraceTabNote.CATEGORY;
     };
+    /** Draws the note. */
     GraceTabNote.prototype.draw = function () {
         _super.prototype.draw.call(this);
         this.setRendered();
@@ -18537,7 +18556,7 @@ var modifier_1 = __webpack_require__(/*! ./modifier */ "./src/modifier.ts");
 var tabslide_1 = __webpack_require__(/*! ./tabslide */ "./src/tabslide.js");
 var tuplet_1 = __webpack_require__(/*! ./tuplet */ "./src/tuplet.js");
 var gracenote_1 = __webpack_require__(/*! ./gracenote */ "./src/gracenote.js");
-var gracetabnote_1 = __webpack_require__(/*! ./gracetabnote */ "./src/gracetabnote.js");
+var gracetabnote_1 = __webpack_require__(/*! ./gracetabnote */ "./src/gracetabnote.ts");
 var tuning_1 = __webpack_require__(/*! ./tuning */ "./src/tuning.ts");
 var keymanager_1 = __webpack_require__(/*! ./keymanager */ "./src/keymanager.js");
 var stavehairpin_1 = __webpack_require__(/*! ./stavehairpin */ "./src/stavehairpin.js");
@@ -18566,7 +18585,7 @@ var parser_1 = __webpack_require__(/*! ./parser */ "./src/parser.js");
 var easyscore_1 = __webpack_require__(/*! ./easyscore */ "./src/easyscore.js");
 var registry_1 = __webpack_require__(/*! ./registry */ "./src/registry.js");
 var stavetext_1 = __webpack_require__(/*! ./stavetext */ "./src/stavetext.js");
-var glyphnote_1 = __webpack_require__(/*! ./glyphnote */ "./src/glyphnote.js");
+var glyphnote_1 = __webpack_require__(/*! ./glyphnote */ "./src/glyphnote.ts");
 var repeatnote_1 = __webpack_require__(/*! ./repeatnote */ "./src/repeatnote.ts");
 var textfont_1 = __webpack_require__(/*! ./textfont */ "./src/textfont.ts");
 var petalumascript_textmetrics_1 = __webpack_require__(/*! ./fonts/petalumascript_textmetrics */ "./src/fonts/petalumascript_textmetrics.ts");
@@ -20511,10 +20530,6 @@ var Note = /** @class */ (function (_super) {
             throw new vex_1.Vex.RERR('NoStave', 'No stave attached to this note.');
         }
         return this.stave.getYForTopText(text_line);
-    };
-    /** Gets a `BoundingBox` for this note. */
-    Note.prototype.getBoundingBox = function () {
-        return undefined;
     };
     /** Returns the voice that this note belongs in. */
     Note.prototype.getVoice = function () {
@@ -22604,7 +22619,7 @@ var __assign = (this && this.__assign) || function () {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RepeatNote = void 0;
-var glyphnote_1 = __webpack_require__(/*! ./glyphnote */ "./src/glyphnote.js");
+var glyphnote_1 = __webpack_require__(/*! ./glyphnote */ "./src/glyphnote.ts");
 var glyph_1 = __webpack_require__(/*! ./glyph */ "./src/glyph.ts");
 var RepeatNote = /** @class */ (function (_super) {
     __extends(RepeatNote, _super);
@@ -22617,7 +22632,7 @@ var RepeatNote = /** @class */ (function (_super) {
             '4': 'repeat4Bars',
             slash: 'repeatBarSlash',
         };
-        _this = _super.call(this, null, __assign({ duration: 'q', align_center: type !== 'slash' }, noteStruct), options) || this;
+        _this = _super.call(this, undefined, __assign({ duration: 'q', align_center: type !== 'slash' }, noteStruct), options) || this;
         _this.setAttribute('type', 'RepeatNote');
         var glyphCode = CODES[type] || 'repeat1Bar';
         var glyph = new glyph_1.Glyph(glyphCode, _this.musicFont.lookupMetric('repeatNote.point', 40), { category: 'repeatNote' });
@@ -24475,14 +24490,14 @@ var __assign = (this && this.__assign) || function () {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StaveNote = void 0;
-var boundingbox_1 = __webpack_require__(/*! ./boundingbox */ "./src/boundingbox.js");
-var dot_1 = __webpack_require__(/*! ./dot */ "./src/dot.js");
-var modifier_1 = __webpack_require__(/*! ./modifier */ "./src/modifier.ts");
-var notehead_1 = __webpack_require__(/*! ./notehead */ "./src/notehead.js");
-var stem_1 = __webpack_require__(/*! ./stem */ "./src/stem.ts");
-var stemmablenote_1 = __webpack_require__(/*! ./stemmablenote */ "./src/stemmablenote.ts");
-var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
+var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
+var boundingbox_1 = __webpack_require__(/*! ./boundingbox */ "./src/boundingbox.js");
+var stem_1 = __webpack_require__(/*! ./stem */ "./src/stem.ts");
+var notehead_1 = __webpack_require__(/*! ./notehead */ "./src/notehead.js");
+var stemmablenote_1 = __webpack_require__(/*! ./stemmablenote */ "./src/stemmablenote.ts");
+var modifier_1 = __webpack_require__(/*! ./modifier */ "./src/modifier.ts");
+var dot_1 = __webpack_require__(/*! ./dot */ "./src/dot.js");
 // To enable logging for this class. Set `Vex.Flow.StaveNote.DEBUG` to `true`.
 function L() {
     var args = [];
@@ -25218,7 +25233,7 @@ var StaveNote = /** @class */ (function (_super) {
         }
         else if (typeof a === 'number' && typeof b === 'object') {
             // eslint-disable-next-line
-            console.warn('deprecated call signature to addModifier, use addModifier(modifier, index) instead');
+            console.warn("deprecated call signature to addModifier, use addModifier(modifier, index) instead");
             index = a;
             modifier = b;
         }
@@ -25291,7 +25306,7 @@ var StaveNote = /** @class */ (function (_super) {
             this.modifierContext.preFormat();
         var width = this.getGlyphWidth() + this.leftDisplacedHeadPx + this.rightDisplacedHeadPx;
         // For upward flagged notes, the width of the flag needs to be added
-        if (this.glyph.flag && this.beam === undefined && this.stem_direction === stem_1.Stem.UP) {
+        if (this.shouldDrawFlag() && this.stem_direction === stem_1.Stem.UP) {
             width += this.getGlyphWidth();
             // TODO: Add flag width as a separate metric
         }
@@ -25435,32 +25450,35 @@ var StaveNote = /** @class */ (function (_super) {
         }
         ctx.closeGroup();
     };
+    StaveNote.prototype.shouldDrawFlag = function () {
+        var hasFlag = this.getGlyph().flag; // this.glyph.flag is a boolean, as specified in tables.js
+        var hasNoBeam = this.beam === undefined;
+        return hasFlag && hasNoBeam;
+    };
     // Draw the flag for the note
     StaveNote.prototype.drawFlag = function () {
-        var _a, _b;
-        var _c = this, stem = _c.stem, beam = _c.beam;
+        var _a, _b, _c;
         var ctx = this.checkContext();
         if (!ctx) {
             throw new vex_1.Vex.RERR('NoCanvasContext', "Can't draw without a canvas context.");
         }
-        var shouldRenderFlag = beam === undefined;
-        var glyph = this.getGlyph();
-        if (glyph.flag && shouldRenderFlag) {
+        if (this.shouldDrawFlag()) {
             var _d = this.getNoteHeadBounds(), y_top = _d.y_top, y_bottom = _d.y_bottom;
-            var noteStemHeight = (_a = stem === null || stem === void 0 ? void 0 : stem.getHeight()) !== null && _a !== void 0 ? _a : 0;
+            var noteStemHeight = (_b = (_a = this.stem) === null || _a === void 0 ? void 0 : _a.getHeight()) !== null && _b !== void 0 ? _b : 0;
             var flagX = this.getStemX();
             // FIXME: What's with the magic +/- 2
             // ANSWER: a corner of the note stem pokes out beyond the tip of the flag.
             // The extra +/- 2 pushes the flag glyph outward so it covers the stem entirely.
+            // Alternatively, we could shorten the stem.
             var flagY = this.getStemDirection() === stem_1.Stem.DOWN
-                ? // Down stems are under the note head and have flags on the right.
+                ? // Down stems are below the note head and have flags on the right.
                     y_top - noteStemHeight + 2
-                : // Up stems have flags on the eft.
+                : // Up stems are above the note head and have flags on the right.
                     y_bottom - noteStemHeight - 2;
             // Draw the Flag
             ctx.openGroup('flag', undefined, { pointerBBox: true });
             this.applyStyle(ctx, this.getFlagStyle());
-            (_b = this.flag) === null || _b === void 0 ? void 0 : _b.render(ctx, flagX, flagY);
+            (_c = this.flag) === null || _c === void 0 ? void 0 : _c.render(ctx, flagX, flagY);
             this.restoreStyle(ctx, this.getFlagStyle());
             ctx.closeGroup();
         }
@@ -25482,6 +25500,11 @@ var StaveNote = /** @class */ (function (_super) {
         var ctx = this.checkContext();
         if (stemOptions) {
             this.setStem(new stem_1.Stem(stemOptions));
+        }
+        // If we will render a flag, we shorten the stem so that the tip
+        // does not poke through the flag.
+        if (this.shouldDrawFlag() && this.stem) {
+            this.stem.renderHeightAdjustment = -3;
         }
         ctx.openGroup('stem', undefined, { pointerBBox: true });
         (_a = this.stem) === null || _a === void 0 ? void 0 : _a.setContext(ctx).draw();
