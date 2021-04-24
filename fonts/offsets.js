@@ -2,7 +2,7 @@
 // Handle the query params.
 const urlParams = new URLSearchParams(window.location.search);
 let vexVersion = urlParams.get("vex_version"); // vexflow.version.number || current
-if (vexVersion === null) {
+if (vexVersion === null || vexVersion === "3") {
     vexVersion = "3.0.9";
 }
 let font = urlParams.get("font"); // bravura (default) || petaluma || gonville
@@ -83,7 +83,7 @@ function createDebouncedSaveScrollOffsets() {
             offsetY = Math.round(window.scrollY);
             const url = getURLWithCurrentQueryParams();
             window.history.replaceState({ path: url }, "", url);
-        }, 300 /* milliseconds */);
+        }, 200 /* milliseconds */);
     };
 }
 const debouncedSaveScrollOffsets = createDebouncedSaveScrollOffsets();
@@ -104,17 +104,19 @@ const AppRoot = {
     data() {
         return {
             info: `VexFlow: ${vexVersion}, Font: ${font}, Scale: ${scale}x, Backend: ${backend}`,
-            vex_release_version: VEX_RELEASE_VERSION
+            vex_release_version: VEX_RELEASE_VERSION,
         };
     },
     mounted() {
         switch (vexVersion) {
-            default:
+            default: {
                 addScriptTag(`/js/vexflow-${vexVersion}.js?` + Math.random(), onVexFlowLoaded);
                 break;
-            case "3.0.9":
+            }
+            case "3.0.9": {
                 addScriptTag(`https://unpkg.com/vexflow@${vexVersion}/releases/vexflow-debug.js`, onVexFlowLoaded);
                 break;
+            }
         }
 
         document.title = "Offsets - " + vexVersion;
@@ -154,7 +156,9 @@ const AppRoot = {
         reloadWithVexRelease() {
             vexVersion = VEX_RELEASE_VERSION;
             reload();
-        }
+        },
+
+        saveScrollOffsets: debouncedSaveScrollOffsets, // See offsets.js
     },
 };
 
@@ -193,13 +197,13 @@ function drawStave() {
             break;
     }
     const f = new VF.Factory({
-        renderer: { elementId: "stave", width: 530 * scale, height: 240 * scale, backend: getBackendType() },
+        renderer: { elementId: "stave", width: 530 * scale, height: 210 * scale, backend: getBackendType() },
     });
 
     const score = f.EasyScore();
     const system = f.System();
 
-    const n0 = score.notes("E5/16, C5/8, G5/4, C5/2, C5/32, C5", { stem: "up" });
+    const n0 = score.notes("E5/16, C5/8, E5/4, C5/2, C5/32, C5", { stem: "up" });
     const n1 = score.notes("F4/16, A4/8, D4/4, A4/2, D4/32, D4", { stem: "down" });
     const n2 = score.notes("C3/4, E3, B3/8, B3/4, E3/8", { clef: "bass", stem: "up" });
     const n3 = score.notes("F2/2, E3/16, E3, C3/32, C3, C3/16, F2, F2, F2, F2", { clef: "bass", stem: "down" });
@@ -212,6 +216,7 @@ function drawStave() {
     system
         .addStave({
             voices: [v0, v1],
+            spaceAbove: -1.5, // make the treble staff closer to the top so we can see more while debugging
         })
         .addClef("treble")
         .addTimeSignature("4/4");
