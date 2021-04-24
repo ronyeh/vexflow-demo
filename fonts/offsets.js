@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Handle the query params.
 const urlParams = new URLSearchParams(window.location.search);
-let vexVersion = urlParams.get("vex_version"); // vexflow.version.number || patched
-if (vexVersion !== "patched") {
+let vexVersion = urlParams.get("vex_version"); // vexflow.version.number || current
+if (vexVersion === null) {
     vexVersion = "3.0.9";
 }
 let font = urlParams.get("font"); // bravura (default) || petaluma || gonville
@@ -98,11 +98,10 @@ const AppRoot = {
     },
     mounted() {
         switch (vexVersion) {
-            case "patched":
-                addScriptTag("/js/vexflow-patched.js?" + Math.random(), onVexFlowLoaded);
-                break;
             default:
-                // 3.0.9
+                addScriptTag(`/js/vexflow-${vexVersion}.js?` + Math.random(), onVexFlowLoaded);
+                break;
+            case "3.0.9":
                 addScriptTag(`https://unpkg.com/vexflow@${vexVersion}/releases/vexflow-debug.js`, onVexFlowLoaded);
                 break;
         }
