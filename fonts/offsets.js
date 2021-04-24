@@ -23,11 +23,11 @@ if (visualDebug === "true") {
 } else {
     visualDebug = false;
 }
-let offsetX = parseInt(urlParams.get("offset_x")); // integer >= 0
+let offsetX = Math.round(parseFloat(urlParams.get("offset_x"))); // number >= 0
 if (isNaN(offsetX) || offsetX < 0) {
     offsetX = 0;
 }
-let offsetY = parseInt(urlParams.get("offset_y")); // integer >= 0
+let offsetY = Math.round(parseFloat(urlParams.get("offset_y"))); // number >= 0
 if (isNaN(offsetY) || offsetY < 0) {
     offsetY = 0;
 }
@@ -71,17 +71,28 @@ function getURLWithCurrentQueryParams() {
 
 // Save the offsetX and offsetY information to the browser's address bar.
 // This allows us to transfer the offsetX / offsetY parameters to a different page, so we can align the values properly.
-function saveScrollOffsets() {
-    offsetX = document.querySelector(".stave-container").scrollLeft;
-    offsetY = window.scrollY;
-    const url = getURLWithCurrentQueryParams();
-    window.history.replaceState({ path: url }, "", url);
+function createDebouncedSaveScrollOffsets() {
+    let timeout = null;
+    // Call this function as fast as you can! :-)
+    return () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            timeout = null;
+            console.log("Save Scroll Offsets " + window.scrollY);
+            offsetX = Math.round(document.querySelector(".stave-container").scrollLeft);
+            offsetY = Math.round(window.scrollY);
+            const url = getURLWithCurrentQueryParams();
+            window.history.replaceState({ path: url }, "", url);
+        }, 300 /* milliseconds */);
+    };
 }
+const debouncedSaveScrollOffsets = createDebouncedSaveScrollOffsets();
 
 function restoreScrollOffsets() {
     if (offsetX > 0) {
         document.querySelector(".stave-container").scrollLeft = offsetX;
     }
+    console.log(offsetY + " is offsetY");
     if (offsetY > 0) {
         window.scroll(0, offsetY);
     }
@@ -89,11 +100,11 @@ function restoreScrollOffsets() {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Vue.js :-)
-
 const AppRoot = {
     data() {
         return {
             info: `VexFlow: ${vexVersion}, Font: ${font}, Scale: ${scale}x, Backend: ${backend}`,
+            vex_release_version: VEX_RELEASE_VERSION
         };
     },
     mounted() {
@@ -107,14 +118,16 @@ const AppRoot = {
         }
 
         document.title = "Offsets - " + vexVersion;
-    },
 
-    created() {
-        window.addEventListener("scroll", saveScrollOffsets);
+        // Don't start saving our scroll offsets until 200 ms after the DOM settles down.
+        // This fixes a bug where the offset_y would creep upward by 1 pixel every time I refreshed the page!
+        setTimeout(() => {
+            window.addEventListener("scroll", debouncedSaveScrollOffsets);
+        }, 200);
     },
 
     beforeUnmount() {
-        window.removeEventListener("scroll", saveScrollOffsets);
+        window.removeEventListener("scroll", debouncedSaveScrollOffsets);
     },
 
     methods: {
@@ -133,7 +146,15 @@ const AppRoot = {
             reload();
         },
 
-        saveScrollOffsets: saveScrollOffsets,
+        reloadWithVexCurrent() {
+            vexVersion = "current";
+            reload();
+        },
+
+        reloadWithVexRelease() {
+            vexVersion = VEX_RELEASE_VERSION;
+            reload();
+        }
     },
 };
 

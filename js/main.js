@@ -4,3 +4,5 @@ function addScriptTag(src, onload) {
     s.src = src;
     document.body.appendChild(s);
 }
+
+VEX_RELEASE_VERSION = "3.0.9";

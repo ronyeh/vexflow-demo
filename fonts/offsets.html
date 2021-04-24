@@ -25,7 +25,7 @@
             <div>
                 Scale: <button @click="reloadWithScale(1)">1x</button><button @click="reloadWithScale(2)">2x</button><button @click="reloadWithScale(4)">4x</button><button @click="reloadWithScale(8)">8x</button
                 ><button @click="reloadWithScale(16)">16x</button><spacer></spacer>Backend: <button @click="reloadWithBackend('svg')">SVG</button><button @click="reloadWithBackend('canvas')">CANVAS</button><spacer></spacer>Visual Debug:
-                <button @click="reloadWithVisualDebug(true)">ON</button><button @click="reloadWithVisualDebug(false)">OFF</button>
+                <button @click="reloadWithVisualDebug(true)">ON</button><button @click="reloadWithVisualDebug(false)">OFF</button><spacer></spacer>VexFlow Version: <button @click="reloadWithVexRelease()">{{vex_release_version}}</button><button @click="reloadWithVexCurrent()">Current</button>
             </div>
             <br />
             <div class="stave-container" @scroll="saveScrollOffsets">
