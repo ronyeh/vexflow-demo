@@ -5,7 +5,7 @@ let vexVersion = urlParams.get("vex_version"); // vexflow.version.number || curr
 let scriptSRC = "";
 let voiceWidth = 100;
 if (vexVersion === null || vexVersion.startsWith("3.")) {
-    vexVersion = "3.0.9";
+    vexVersion = VEX_RELEASE_VERSION;
     scriptSRC = `https://unpkg.com/vexflow@${vexVersion}/releases/vexflow-debug.js`;
     voiceWidth = 180;
 } else {
@@ -244,7 +244,7 @@ function drawStave() {
         });
     }
 
-    var stave = new VF.Stave(0,0, voiceWidth + 40, {space_above_staff_ln: 3.25});
+    var stave = new VF.Stave(0,0, voiceWidth + 40, {space_above_staff_ln: 3.75});
 
     var v0 = new VF.Voice({num_beats: 4,  beat_value: 4});
     v0.addTickables(n0);
