@@ -24,3 +24,8 @@ h3 {
         color: #ccf;
     }
 }
+
+a.src_code {
+    text-decoration: none;
+    color: gray;
+}

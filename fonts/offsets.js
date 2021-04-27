@@ -2,8 +2,15 @@
 // Handle the query params.
 const urlParams = new URLSearchParams(window.location.search);
 let vexVersion = urlParams.get("vex_version"); // vexflow.version.number || current
-if (vexVersion === null || vexVersion === "3") {
+let scriptSRC = "";
+let voiceWidth = 100;
+if (vexVersion === null || vexVersion.startsWith("3.")) {
     vexVersion = "3.0.9";
+    scriptSRC = `https://unpkg.com/vexflow@${vexVersion}/releases/vexflow-debug.js`;
+    voiceWidth = 180;
+} else {
+    scriptSRC = `/js/vexflow-${vexVersion}.js?` + Math.random();
+    voiceWidth = 180;
 }
 let font = urlParams.get("font"); // bravura (default) || petaluma || gonville
 if (font !== "petaluma" && font !== "gonville") {
@@ -23,6 +30,14 @@ if (visualDebug === "true") {
 } else {
     visualDebug = false;
 }
+// Allow us to rotate the ordering of notes easily, for visual testing. :-)
+let rotateNotesOffset = parseInt(urlParams.get("rot")); // integer >= 0
+if (isNaN(rotateNotesOffset) || rotateNotesOffset < 0) {
+    rotateNotesOffset = 0;
+} else if (rotateNotesOffset > 10) {
+    rotateNotesOffset = 10;
+}
+
 let offsetX = Math.round(parseFloat(urlParams.get("offset_x"))); // number >= 0
 if (isNaN(offsetX) || offsetX < 0) {
     offsetX = 0;
@@ -92,7 +107,6 @@ function restoreScrollOffsets() {
     if (offsetX > 0) {
         document.querySelector(".stave-container").scrollLeft = offsetX;
     }
-    console.log(offsetY + " is offsetY");
     if (offsetY > 0) {
         window.scroll(0, offsetY);
     }
@@ -108,18 +122,8 @@ const AppRoot = {
         };
     },
     mounted() {
-        switch (vexVersion) {
-            default: {
-                addScriptTag(`/js/vexflow-${vexVersion}.js?` + Math.random(), onVexFlowLoaded);
-                break;
-            }
-            case "3.0.9": {
-                addScriptTag(`https://unpkg.com/vexflow@${vexVersion}/releases/vexflow-debug.js`, onVexFlowLoaded);
-                break;
-            }
-        }
-
-        document.title = "Offsets - " + vexVersion;
+        document.title = font + " - " + vexVersion;
+        addScriptTag(scriptSRC, onVexFlowLoaded);
 
         // Don't start saving our scroll offsets until 200 ms after the DOM settles down.
         // This fixes a bug where the offset_y would creep upward by 1 pixel every time I refreshed the page!
@@ -196,32 +200,39 @@ function drawStave() {
             VF.DEFAULT_FONT_STACK = [VF.Fonts.Gonville, VF.Fonts.Bravura, VF.Fonts.Custom];
             break;
     }
-    const f = new VF.Factory({
-        renderer: { elementId: "stave", width: 530 * scale, height: 210 * scale, backend: getBackendType() },
-    });
 
-    const score = f.EasyScore();
-    const system = f.System();
+    var target = document.getElementById("stave");
+    var renderer = new VF.Renderer(target, getBackendType());
+    renderer.resize(530 * scale, 120 * scale);
+    var context = renderer.getContext();
+    context.scale(scale, scale);
 
-    const n0 = score.notes("E5/16, C5/8, E5/4, C5/2, C5/32, C5", { stem: "up" });
-    const n1 = score.notes("F4/16, A4/8, D4/4, A4/2, D4/32, D4", { stem: "down" });
-    const n2 = score.notes("C3/4, E3, B3/8, B3/4, E3/8", { clef: "bass", stem: "up" });
-    const n3 = score.notes("F2/2, E3/16, E3, C3/32, C3, C3/16, F2, F2, F2, F2", { clef: "bass", stem: "down" });
+    let n0 = [
+        new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "16" }),
+        new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "32" }),
+        new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "32" }),
+        new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "8" }),
+        new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "4" }),
+        new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "2" }),
+    ];
 
-    const v0 = score.voice(n0);
-    const v1 = score.voice(n1);
-    const v2 = score.voice(n2);
-    const v3 = score.voice(n3);
+    let n1 = [
+        new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "16", stem_direction:-1 }),
+        new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "32", stem_direction:-1 }),
+        new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "32", stem_direction:-1 }),
+        new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "8", stem_direction:-1 }),
+        new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "4", stem_direction:-1 }),
+        new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "2", stem_direction:-1 }),
+    ];
 
-    system
-        .addStave({
-            voices: [v0, v1],
-            spaceAbove: -1.5, // make the treble staff closer to the top so we can see more while debugging
-        })
-        .addClef("treble")
-        .addTimeSignature("4/4");
+    for (let i=0; i<rotateNotesOffset; i++) {
+        let note = n0.shift();
+        n0.push(note);
+        note = n1.shift();
+        n1.push(note);
+    }
 
-    const allNotes = [...n0, ...n1, ...n2, ...n3];
+    const allNotes = [...n0, ...n1 ];
 
     if (visualDebug) {
         const debugStyle = {
@@ -233,16 +244,21 @@ function drawStave() {
         });
     }
 
-    system
-        .addStave({
-            voices: [v2, v3],
-            spaceAbove: -4, // make the grand staff shorter so we can see more while debugging
-        })
-        .addClef("bass")
-        .addTimeSignature("4/4");
+    var stave = new VF.Stave(0,0, voiceWidth + 40, {space_above_staff_ln: 3.25});
 
-    system.addConnector();
+    var v0 = new VF.Voice({num_beats: 4,  beat_value: 4});
+    v0.addTickables(n0);
+    v0.setStave(stave);
 
-    f.context.scale(scale, scale);
-    f.draw();
+    var v1 = new VF.Voice({num_beats: 4,  beat_value: 4});
+    v1.addTickables(n1);
+    v1.setStave(stave);
+
+    var formatter = new VF.Formatter();
+    formatter.format([v0, v1], voiceWidth);
+
+    stave.setStyle({strokeStyle:"rgba(0,0,0,0.1)"});
+    stave.setContext(context).draw();
+    v0.setContext(context).draw();
+    v1.setContext(context).draw();
 }

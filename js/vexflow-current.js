@@ -10602,7 +10602,7 @@ exports.GonvilleMetrics = {
     },
     glyphs: {
         flag: {
-            shiftX: -0.16,
+            shiftX: -0.10,
         },
         textNote: {
             point: 40,
@@ -25466,6 +25466,12 @@ var StaveNote = /** @class */ (function (_super) {
             var _d = this.getNoteHeadBounds(), y_top = _d.y_top, y_bottom = _d.y_bottom;
             var noteStemHeight = (_b = (_a = this.stem) === null || _a === void 0 ? void 0 : _a.getHeight()) !== null && _b !== void 0 ? _b : 0;
             var flagX = this.getStemX();
+            // RONYEH HACK
+            if (this.getStemDirection() === stem_1.Stem.DOWN) {
+              flagX -= 0.06;
+            } else {
+              flagX += 0.02;
+            }
             // FIXME: What's with the magic +/- 2
             // ANSWER: a corner of the note stem pokes out beyond the tip of the flag.
             // The extra +/- 2 pushes the flag glyph outward so it covers the stem entirely.
