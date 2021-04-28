@@ -4110,9 +4110,9 @@ exports.Crescendo = Crescendo;
 
 /***/ }),
 
-/***/ "./src/curve.js":
+/***/ "./src/curve.ts":
 /*!**********************!*\
-  !*** ./src/curve.js ***!
+  !*** ./src/curve.ts ***!
   \**********************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -4138,10 +4138,26 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Curve = void 0;
+exports.Curve = exports.Position = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var element_1 = __webpack_require__(/*! ./element */ "./src/element.ts");
+var Position;
+(function (Position) {
+    Position[Position["NEAR_HEAD"] = 1] = "NEAR_HEAD";
+    Position[Position["NEAR_TOP"] = 2] = "NEAR_TOP";
+})(Position = exports.Position || (exports.Position = {}));
 var Curve = /** @class */ (function (_super) {
     __extends(Curve, _super);
     // from: Start note
@@ -4153,29 +4169,17 @@ var Curve = /** @class */ (function (_super) {
     function Curve(from, to, options) {
         var _this = _super.call(this) || this;
         _this.setAttribute('type', 'Curve');
-        _this.render_options = {
-            spacing: 2,
-            thickness: 2,
-            x_shift: 0,
-            y_shift: 10,
-            position: Curve.Position.NEAR_HEAD,
-            position_end: Curve.Position.NEAR_HEAD,
-            invert: false,
-            cps: [
+        _this.render_options = __assign({ thickness: 2, x_shift: 0, y_shift: 10, position: Curve.Position.NEAR_HEAD, position_end: Curve.Position.NEAR_HEAD, invert: false, cps: [
                 { x: 0, y: 10 },
                 { x: 0, y: 10 },
-            ],
-        };
-        vex_1.Vex.Merge(_this.render_options, options);
-        _this.setNotes(from, to);
+            ] }, options);
+        _this.from = from;
+        _this.to = to;
         return _this;
     }
     Object.defineProperty(Curve, "Position", {
         get: function () {
-            return {
-                NEAR_HEAD: 1,
-                NEAR_TOP: 2,
-            };
+            return Position;
         },
         enumerable: false,
         configurable: true
@@ -4192,7 +4196,7 @@ var Curve = /** @class */ (function (_super) {
     });
     Curve.prototype.setNotes = function (from, to) {
         if (!from && !to) {
-            throw new vex_1.Vex.RuntimeError('BadArguments', 'Curve needs to have either first_note or last_note set.');
+            throw new vex_1.Vex.RERR('BadArguments', 'Curve needs to have either first_note or last_note set.');
         }
         this.from = from;
         this.to = to;
@@ -4205,7 +4209,7 @@ var Curve = /** @class */ (function (_super) {
         return !this.from || !this.to;
     };
     Curve.prototype.renderCurve = function (params) {
-        var ctx = this.context;
+        var ctx = this.checkContext();
         var cps = this.render_options.cps;
         var x_shift = this.render_options.x_shift;
         var y_shift = this.render_options.y_shift * params.direction;
@@ -4232,7 +4236,7 @@ var Curve = /** @class */ (function (_super) {
         var last_x;
         var first_y;
         var last_y;
-        var stem_direction;
+        var stem_direction = 0;
         var metric = 'baseY';
         var end_metric = 'baseY';
         function getPosition(position) {
@@ -4256,7 +4260,10 @@ var Curve = /** @class */ (function (_super) {
             first_y = first_note.getStemExtents()[metric];
         }
         else {
-            first_x = last_note.getStave().getTieStartX();
+            var stave = last_note.getStave();
+            if (!stave)
+                throw new vex_1.Vex.RERR('NoStave', 'No stave attached.');
+            first_x = stave.getTieStartX();
             first_y = last_note.getStemExtents()[metric];
         }
         if (last_note) {
@@ -4265,7 +4272,10 @@ var Curve = /** @class */ (function (_super) {
             last_y = last_note.getStemExtents()[end_metric];
         }
         else {
-            last_x = first_note.getStave().getTieEndX();
+            var stave = first_note.getStave();
+            if (!stave)
+                throw new vex_1.Vex.RERR('NoStave', 'No stave attached.');
+            last_x = stave.getTieEndX();
             last_y = first_note.getStemExtents()[end_metric];
         }
         this.renderCurve({
@@ -5112,7 +5122,7 @@ var tickcontext_1 = __webpack_require__(/*! ./tickcontext */ "./src/tickcontext.
 var tuplet_1 = __webpack_require__(/*! ./tuplet */ "./src/tuplet.js");
 var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.js");
 var beam_1 = __webpack_require__(/*! ./beam */ "./src/beam.ts");
-var curve_1 = __webpack_require__(/*! ./curve */ "./src/curve.js");
+var curve_1 = __webpack_require__(/*! ./curve */ "./src/curve.ts");
 var gracenote_1 = __webpack_require__(/*! ./gracenote */ "./src/gracenote.js");
 var gracenotegroup_1 = __webpack_require__(/*! ./gracenotegroup */ "./src/gracenotegroup.ts");
 var notesubgroup_1 = __webpack_require__(/*! ./notesubgroup */ "./src/notesubgroup.js");
@@ -10618,7 +10628,22 @@ exports.GonvilleMetrics = {
     },
     glyphs: {
         flag: {
-            shiftX: -0.10,
+            shiftX: -0.08,
+            flag8thDown: {
+                shiftX: -0.16,
+            },
+            flag16thDown: {
+                shiftX: -0.16,
+            },
+            flag32ndDown: {
+                shiftX: -0.16,
+            },
+            flag64thDown: {
+                shiftX: -0.16,
+            },
+            flag128thDown: {
+                shiftX: -0.16,
+            },
         },
         textNote: {
             point: 40,
@@ -14208,7 +14233,31 @@ exports.PetalumaMetrics = {
             shiftX: -7,
         },
         flag: {
-            shiftX: -0.75,
+            shiftX: -0.77,
+            flag16thUp: {
+                shiftX: -0.75,
+            },
+            flag32ndUp: {
+                shiftX: -0.85,
+            },
+            flag64thUp: {
+                shiftX: -1.55,
+            },
+            flag128thUp: {
+                shiftX: -1.3,
+            },
+            flag16thDown: {
+                shiftX: -0.75,
+            },
+            flag32ndDown: {
+                shiftX: -0.76,
+            },
+            flag64thDown: {
+                shiftX: -1.5,
+            },
+            flag128thDown: {
+                shiftX: -1.2,
+            },
             tabStem: {
                 shiftX: -1.75,
             },
@@ -18583,7 +18632,7 @@ var stavehairpin_1 = __webpack_require__(/*! ./stavehairpin */ "./src/stavehairp
 var boundingbox_1 = __webpack_require__(/*! ./boundingbox */ "./src/boundingbox.js");
 var strokes_1 = __webpack_require__(/*! ./strokes */ "./src/strokes.js");
 var textnote_1 = __webpack_require__(/*! ./textnote */ "./src/textnote.js");
-var curve_1 = __webpack_require__(/*! ./curve */ "./src/curve.js");
+var curve_1 = __webpack_require__(/*! ./curve */ "./src/curve.ts");
 var textdynamics_1 = __webpack_require__(/*! ./textdynamics */ "./src/textdynamics.js");
 var staveline_1 = __webpack_require__(/*! ./staveline */ "./src/staveline.js");
 var ornament_1 = __webpack_require__(/*! ./ornament */ "./src/ornament.js");
@@ -18595,7 +18644,7 @@ var barnote_1 = __webpack_require__(/*! ./barnote */ "./src/barnote.js");
 var ghostnote_1 = __webpack_require__(/*! ./ghostnote */ "./src/ghostnote.js");
 var notesubgroup_1 = __webpack_require__(/*! ./notesubgroup */ "./src/notesubgroup.js");
 var gracenotegroup_1 = __webpack_require__(/*! ./gracenotegroup */ "./src/gracenotegroup.ts");
-var tremolo_1 = __webpack_require__(/*! ./tremolo */ "./src/tremolo.js");
+var tremolo_1 = __webpack_require__(/*! ./tremolo */ "./src/tremolo.ts");
 var stringnumber_1 = __webpack_require__(/*! ./stringnumber */ "./src/stringnumber.js");
 var crescendo_1 = __webpack_require__(/*! ./crescendo */ "./src/crescendo.js");
 var stavevolta_1 = __webpack_require__(/*! ./stavevolta */ "./src/stavevolta.js");
@@ -20682,6 +20731,30 @@ var Note = /** @class */ (function (_super) {
     /** Sets preformatted status. */
     Note.prototype.setPreFormatted = function (value) {
         this.preFormatted = value;
+    };
+    // Get the direction of the stem
+    Note.prototype.getStemDirection = function () {
+        throw new vex_1.Vex.RERR('NoStem', 'No stem attached to this note.');
+    };
+    // Get the top and bottom `y` values of the stem.
+    Note.prototype.getStemExtents = function () {
+        throw new vex_1.Vex.RERR('NoStem', 'No stem attached to this note.');
+    };
+    // Get the `x` coordinate to the right of the note
+    Note.prototype.getTieRightX = function () {
+        var tieStartX = this.getAbsoluteX();
+        var note_glyph_width = this.glyph.getWidth();
+        tieStartX += note_glyph_width / 2;
+        tieStartX += -this.width / 2 + this.width + 2;
+        return tieStartX;
+    };
+    // Get the `x` coordinate to the left of the note
+    Note.prototype.getTieLeftX = function () {
+        var tieEndX = this.getAbsoluteX();
+        var note_glyph_width = this.glyph.getWidth();
+        tieEndX += note_glyph_width / 2;
+        tieEndX -= this.width / 2 + 2;
+        return tieEndX;
     };
     return Note;
 }(tickable_1.Tickable));
@@ -25486,37 +25559,6 @@ var StaveNote = /** @class */ (function (_super) {
             var _d = this.getNoteHeadBounds(), y_top = _d.y_top, y_bottom = _d.y_bottom;
             var noteStemHeight = (_b = (_a = this.stem) === null || _a === void 0 ? void 0 : _a.getHeight()) !== null && _b !== void 0 ? _b : 0;
             var flagX = this.getStemX();
-            //////////////////////////////////////////////////////////////////////////////////////////////////
-            // HACK HACK HACK!!!
-            switch (this.musicFont.getName()) {
-                case 'Bravura':
-                default:
-                    if (this.getStemDirection() === stem_1.Stem.DOWN) {
-                        // Bravura down stem flags need no adjustment!
-                    }
-                    else {
-                        flagX += 0.02; // Bravura up stem flags need a rightward adjustment.
-                    }
-                    break;
-                case 'Petaluma':
-                    if (this.getStemDirection() === stem_1.Stem.DOWN) {
-                        // Petaluma down stem flags need no adjustment!
-                    }
-                    else {
-                        flagX -= 0.06; // Petaluma up stems flags need a leftward adjustment.
-                    }
-                    break;
-                case 'Gonville':
-                    if (this.getStemDirection() === stem_1.Stem.DOWN) {
-                        flagX -= 0.06; // Gonville down stem flags need a small leftward adjustment
-                    }
-                    else {
-                        flagX += 0.03; // Gonville up stem flags need a tiny rightward adjustment
-                    }
-                    break;
-            }
-            // END HACK
-            //////////////////////////////////////////////////////////////////////////////////////////////////
             // FIXME: What's with the magic +/- 2
             // ANSWER: a corner of the note stem pokes out beyond the tip of the flag.
             // The extra +/- 2 pushes the flag glyph outward so it covers the stem entirely.
@@ -29748,22 +29790,6 @@ var TabNote = /** @class */ (function (_super) {
         this.preFormatted = false;
         return this;
     };
-    // Get the `x` coordinate to the right of the note
-    TabNote.prototype.getTieRightX = function () {
-        var tieStartX = this.getAbsoluteX();
-        var note_glyph_width = this.glyph.getWidth();
-        tieStartX += note_glyph_width / 2;
-        tieStartX += -this.width / 2 + this.width + 2;
-        return tieStartX;
-    };
-    // Get the `x` coordinate to the left of the note
-    TabNote.prototype.getTieLeftX = function () {
-        var tieEndX = this.getAbsoluteX();
-        var note_glyph_width = this.glyph.getWidth();
-        tieEndX += note_glyph_width / 2;
-        tieEndX -= this.width / 2 + 2;
-        return tieEndX;
-    };
     // Get the default `x` and `y` coordinates for a modifier at a specific
     // `position` at a fret position `index`
     TabNote.prototype.getModifierStartXY = function (position, index) {
@@ -31882,9 +31908,9 @@ exports.TimeSigNote = TimeSigNote;
 
 /***/ }),
 
-/***/ "./src/tremolo.js":
+/***/ "./src/tremolo.ts":
 /*!************************!*\
-  !*** ./src/tremolo.js ***!
+  !*** ./src/tremolo.ts ***!
   \************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -31923,8 +31949,6 @@ var Tremolo = /** @class */ (function (_super) {
         var _this = _super.call(this) || this;
         _this.setAttribute('type', 'Tremolo');
         _this.num = num;
-        _this.note = null;
-        _this.index = null;
         _this.position = modifier_1.Modifier.Position.CENTER;
         _this.code = 'tremolo1';
         return _this;
@@ -31940,7 +31964,7 @@ var Tremolo = /** @class */ (function (_super) {
         return Tremolo.CATEGORY;
     };
     Tremolo.prototype.draw = function () {
-        this.checkContext();
+        var ctx = this.checkContext();
         if (!(this.note && this.index != null)) {
             throw new vex_1.Vex.RERR('NoAttachedNote', "Can't draw Tremolo without a note and index.");
         }
@@ -31953,7 +31977,7 @@ var Tremolo = /** @class */ (function (_super) {
         var category = "tremolo." + (isGraceNote ? 'grace' : 'default');
         this.y_spacing = this.musicFont.lookupMetric(category + ".spacing") * stemDirection;
         var height = this.num * this.y_spacing;
-        var y = this.note.stem.getExtents().baseY - height;
+        var y = this.note.getStemExtents().baseY - height;
         if (stemDirection < 0) {
             y += this.musicFont.lookupMetric(category + ".offsetYStemDown") * scale;
         }
@@ -31972,7 +31996,7 @@ var Tremolo = /** @class */ (function (_super) {
         };
         x += this.musicFont.lookupMetric(category + ".offsetXStem" + (stemDirection === stem_1.Stem.UP ? 'Up' : 'Down'));
         for (var i = 0; i < this.num; ++i) {
-            glyph_1.Glyph.renderGlyph(this.context, x, y, this.render_options.font_scale, this.code, { category: category });
+            glyph_1.Glyph.renderGlyph(ctx, x, y, this.render_options.font_scale, this.code, { category: category });
             y += this.y_spacing;
         }
     };

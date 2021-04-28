@@ -1,18 +1,15 @@
-const NUM_NOTE_GROUPS = 6;
+const NUM_NOTE_GROUPS = 8;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Handle the query params.
 const urlParams = new URLSearchParams(window.location.search);
 let vexVersion = urlParams.get("vex_version"); // vexflow.version.number || current
 let scriptSRC = "";
-let voiceWidth = 100;
 if (vexVersion === null || vexVersion.startsWith("3")) {
     vexVersion = VEX_RELEASE_VERSION;
     scriptSRC = `https://unpkg.com/vexflow@${vexVersion}/releases/vexflow-debug.js`;
-    voiceWidth = 180;
 } else {
     scriptSRC = `/js/vexflow-${vexVersion}.js?` + Math.random();
-    voiceWidth = 180;
 }
 let font = urlParams.get("font"); // bravura (default) || petaluma || gonville
 if (font !== "petaluma" && font !== "gonville") {
@@ -209,24 +206,28 @@ function drawStave() {
 
     var target = document.getElementById("stave");
     var renderer = new VF.Renderer(target, getBackendType());
-    renderer.resize(530 * scale, 120 * scale);
+    renderer.resize(500 * scale, 190 * scale);
     var context = renderer.getContext();
     context.scale(scale, scale);
 
     let n0 = [
+        new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "8" }),
         new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "16" }),
         new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "32" }),
-        new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "32" }),
-        new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "8" }),
+        new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "64" }),
+        new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "128" }),
+        new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "128" }),
         new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "4" }),
         new VF.StaveNote({clef: "treble", keys: ["c/5"], duration: "2" }),
     ];
 
     let n1 = [
+        new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "8", stem_direction:-1 }),
         new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "16", stem_direction:-1 }),
         new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "32", stem_direction:-1 }),
-        new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "32", stem_direction:-1 }),
-        new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "8", stem_direction:-1 }),
+        new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "64", stem_direction:-1 }),
+        new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "128", stem_direction:-1 }),
+        new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "128", stem_direction:-1 }),
         new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "4", stem_direction:-1 }),
         new VF.StaveNote({clef: "treble", keys: ["a/4"], duration: "2", stem_direction:-1 }),
     ];
@@ -250,18 +251,19 @@ function drawStave() {
         });
     }
 
-    var stave = new VF.Stave(0,0, voiceWidth + 40, {space_above_staff_ln: 3.75});
+    let width = 300;
+    let stave = new VF.Stave(0,0, width, {space_above_staff_ln: 7});
 
-    var v0 = new VF.Voice({num_beats: 4,  beat_value: 4});
+    let v0 = new VF.Voice({num_beats: 4,  beat_value: 4});
     v0.addTickables(n0);
     v0.setStave(stave);
 
-    var v1 = new VF.Voice({num_beats: 4,  beat_value: 4});
+    let v1 = new VF.Voice({num_beats: 4,  beat_value: 4});
     v1.addTickables(n1);
     v1.setStave(stave);
 
-    var formatter = new VF.Formatter();
-    formatter.format([v0, v1], voiceWidth);
+    let formatter = new VF.Formatter();
+    formatter.format([v0, v1], width);
 
     stave.setStyle({strokeStyle:"rgba(0,0,0,0.1)"});
     stave.setContext(context).draw();
