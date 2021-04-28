@@ -1,10 +1,12 @@
+const NUM_NOTE_GROUPS = 6;
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Handle the query params.
 const urlParams = new URLSearchParams(window.location.search);
 let vexVersion = urlParams.get("vex_version"); // vexflow.version.number || current
 let scriptSRC = "";
 let voiceWidth = 100;
-if (vexVersion === null || vexVersion.startsWith("3.")) {
+if (vexVersion === null || vexVersion.startsWith("3")) {
     vexVersion = VEX_RELEASE_VERSION;
     scriptSRC = `https://unpkg.com/vexflow@${vexVersion}/releases/vexflow-debug.js`;
     voiceWidth = 180;
@@ -34,15 +36,15 @@ if (visualDebug === "true") {
 let rotateNotesOffset = parseInt(urlParams.get("rot")); // integer >= 0
 if (isNaN(rotateNotesOffset) || rotateNotesOffset < 0) {
     rotateNotesOffset = 0;
-} else if (rotateNotesOffset > 10) {
-    rotateNotesOffset = 10;
+} else if (rotateNotesOffset >= NUM_NOTE_GROUPS) {
+    rotateNotesOffset = 0;
 }
 
-let offsetX = Math.round(parseFloat(urlParams.get("offset_x"))); // number >= 0
+let offsetX = Math.floor(parseInt(urlParams.get("offset_x"))); // number >= 0
 if (isNaN(offsetX) || offsetX < 0) {
     offsetX = 0;
 }
-let offsetY = Math.round(parseFloat(urlParams.get("offset_y"))); // number >= 0
+let offsetY = Math.floor(parseInt(urlParams.get("offset_y"))); // number >= 0
 if (isNaN(offsetY) || offsetY < 0) {
     offsetY = 0;
 }
@@ -80,7 +82,7 @@ function reload() {
 
 function getURLWithCurrentQueryParams() {
     return (
-        window.location.protocol + "//" + window.location.host + window.location.pathname + `?vex_version=${vexVersion}&font=${font}&scale=${scale}&context_type=${backend}&visual_debug=${visualDebug}&offset_x=${offsetX}&offset_y=${offsetY}`
+        window.location.protocol + "//" + window.location.host + window.location.pathname + `?vex_version=${vexVersion}&font=${font}&scale=${scale}&context_type=${backend}&visual_debug=${visualDebug}&rot=${rotateNotesOffset}&offset_x=${offsetX}&offset_y=${offsetY}`
     );
 }
 
@@ -93,12 +95,13 @@ function createDebouncedSaveScrollOffsets() {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
             timeout = null;
-            console.log("Save Scroll Offsets " + window.scrollY);
-            offsetX = Math.round(document.querySelector(".stave-container").scrollLeft);
-            offsetY = Math.round(window.scrollY);
+
+            offsetX = Math.floor(document.querySelector(".stave-container").scrollLeft);
+            offsetY = Math.floor(window.scrollY);
+            console.log("Save Scroll Offsets " + offsetX + ", " + offsetY);
             const url = getURLWithCurrentQueryParams();
             window.history.replaceState({ path: url }, "", url);
-        }, 200 /* milliseconds */);
+        }, 500 /* milliseconds */);
     };
 }
 const debouncedSaveScrollOffsets = createDebouncedSaveScrollOffsets();
@@ -124,12 +127,7 @@ const AppRoot = {
     mounted() {
         document.title = font + " - " + vexVersion;
         addScriptTag(scriptSRC, onVexFlowLoaded);
-
-        // Don't start saving our scroll offsets until 200 ms after the DOM settles down.
-        // This fixes a bug where the offset_y would creep upward by 1 pixel every time I refreshed the page!
-        setTimeout(() => {
-            window.addEventListener("scroll", debouncedSaveScrollOffsets);
-        }, 200);
+        window.addEventListener("scroll", debouncedSaveScrollOffsets);
     },
 
     beforeUnmount() {
@@ -162,6 +160,14 @@ const AppRoot = {
             reload();
         },
 
+        rotateNotes() {
+            rotateNotesOffset++;
+            if (rotateNotesOffset >= NUM_NOTE_GROUPS) {
+                rotateNotesOffset = 0;
+            }
+            reload();
+        },
+
         saveScrollOffsets: debouncedSaveScrollOffsets, // See offsets.js
     },
 };
@@ -183,7 +189,7 @@ app.mount("#app");
 
 function onVexFlowLoaded() {
     drawStave();
-    restoreScrollOffsets();
+    setTimeout(restoreScrollOffsets, 300); // The delay fixes a bug where the window.scroll(...) drifts by 1 pixel vertically upon every refresh! :-|
 }
 
 function drawStave() {
