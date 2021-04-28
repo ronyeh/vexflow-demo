@@ -1321,9 +1321,9 @@ exports.BarNote = BarNote;
 
 /***/ }),
 
-/***/ "./src/beam.js":
+/***/ "./src/beam.ts":
 /*!*********************!*\
-  !*** ./src/beam.js ***!
+  !*** ./src/beam.ts ***!
   \*********************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -1385,18 +1385,21 @@ var BEAM_BOTH = 'B';
 var Beam = /** @class */ (function (_super) {
     __extends(Beam, _super);
     function Beam(notes, auto_stem) {
+        if (auto_stem === void 0) { auto_stem = false; }
         var _this = _super.call(this) || this;
+        _this.slope = 0;
+        _this.y_shift = 0;
         _this.setAttribute('type', 'Beam');
         if (!notes || notes === []) {
-            throw new vex_1.Vex.RuntimeError('BadArguments', 'No notes provided for beam.');
+            throw new vex_1.Vex.RERR('BadArguments', 'No notes provided for beam.');
         }
         if (notes.length === 1) {
-            throw new vex_1.Vex.RuntimeError('BadArguments', 'Too few notes for beam.');
+            throw new vex_1.Vex.RERR('BadArguments', 'Too few notes for beam.');
         }
         // Validate beam line, direction and ticks.
         _this.ticks = notes[0].getIntrinsicTicks();
         if (_this.ticks >= tables_1.Flow.durationToTicks('4')) {
-            throw new vex_1.Vex.RuntimeError('BadArguments', 'Beams can only be applied to notes shorter than a quarter note.');
+            throw new vex_1.Vex.RERR('BadArguments', 'Beams can only be applied to notes shorter than a quarter note.');
         }
         var i; // shared iterator
         var note;
@@ -1415,7 +1418,7 @@ var Beam = /** @class */ (function (_super) {
         }
         else if (auto_stem && notes[0].getCategory() === 'tabnotes') {
             // Auto Stem TabNotes
-            var stem_weight = notes.reduce(function (memo, note) { return memo + note.stem_direction; }, 0);
+            var stem_weight = notes.reduce(function (memo, note) { return memo + note.getStemDirection(); }, 0);
             stem_direction = stem_weight > -1 ? stem_1.Stem.UP : stem_1.Stem.DOWN;
         }
         // Apply stem directions and attach beam to notes
@@ -1539,7 +1542,7 @@ var Beam = /** @class */ (function (_super) {
         // Convert beam groups to tick amounts
         var tickGroups = config.groups.map(function (group) {
             if (!group.multiply) {
-                throw new vex_1.Vex.RuntimeError('InvalidBeamGroups', 'The beam groups must be an array of Vex.Flow.Fractions');
+                throw new vex_1.Vex.RERR('InvalidBeamGroups', 'The beam groups must be an array of Vex.Flow.Fractions');
             }
             return group.clone().multiply(tables_1.Flow.RESOLUTION, 1);
         });
@@ -1573,8 +1576,8 @@ var Beam = /** @class */ (function (_super) {
                 var ticksPerGroup = tickGroups[currentTickGroup].clone();
                 var totalTicks = getTotalTicks(currentGroup).add(currentGroupTotalTicks);
                 // Double the amount of ticks in a group, if it's an unbeamable tuplet
-                var unbeamable = tables_1.Flow.durationToNumber(unprocessedNote.duration) < 8;
-                if (unbeamable && unprocessedNote.tuplet) {
+                var unbeamable = tables_1.Flow.durationToNumber(unprocessedNote.getDuration()) < 8;
+                if (unbeamable && unprocessedNote.getTuplet()) {
                     ticksPerGroup.numerator *= 2;
                 }
                 // If the note that was just added overflows the group tick total
@@ -1582,7 +1585,9 @@ var Beam = /** @class */ (function (_super) {
                     // If the overflow note can be beamed, start the next group
                     // with it. Unbeamable notes leave the group overflowed.
                     if (!unbeamable) {
-                        nextGroup.push(currentGroup.pop());
+                        var note = currentGroup.pop();
+                        if (note)
+                            nextGroup.push(note);
                     }
                     noteGroups.push(currentGroup);
                     // We have overflown, so we're going to next tick group. As we might have
@@ -1637,7 +1642,7 @@ var Beam = /** @class */ (function (_super) {
                         var currentDirection = note.getStemDirection();
                         breakOnStemChange = currentDirection !== prevDirection;
                     }
-                    var isUnbeamableDuration = parseInt(note.duration, 10) < 8;
+                    var isUnbeamableDuration = parseInt(note.getDuration(), 10) < 8;
                     // Determine if the group should be broken at this note
                     var shouldBreak = breaksOnEachRest || breaksOnFirstOrLastRest || breakOnStemChange || isUnbeamableDuration;
                     if (shouldBreak) {
@@ -1699,10 +1704,11 @@ var Beam = /** @class */ (function (_super) {
             var uniqueTuplets = [];
             // Go through all of the note groups and inspect for tuplets
             noteGroups.forEach(function (group) {
-                var tuplet = null;
+                var tuplet;
                 group.forEach(function (note) {
-                    if (note.tuplet && tuplet !== note.tuplet) {
-                        tuplet = note.tuplet;
+                    var noteTuplet = note.getTuplet();
+                    if (noteTuplet && tuplet !== noteTuplet) {
+                        tuplet = noteTuplet;
                         uniqueTuplets.push(tuplet);
                     }
                 });
@@ -1895,17 +1901,23 @@ var Beam = /** @class */ (function (_super) {
         var firstStemX = firstNote.getStemX();
         for (var i = 0; i < notes.length; ++i) {
             var note = notes[i];
-            var stemX = note.getStemX();
-            var stemTipY = note.getStemExtents().topY;
-            var beamedStemTipY = this.getSlopeY(stemX, firstStemX, firstStemTipY, slope) + y_shift;
-            var preBeamExtension = note.getStem().getExtension();
-            var beamExtension = stem_direction === stem_1.Stem.UP ? stemTipY - beamedStemTipY : beamedStemTipY - stemTipY;
-            note.stem.setExtension(preBeamExtension + beamExtension);
-            note.stem.renderHeightAdjustment = -stem_1.Stem.WIDTH / 2;
-            if (note.isRest() && show_stemlets) {
-                var beamWidth = beam_width;
-                var totalBeamWidth = (beam_count - 1) * beamWidth * 1.5 + beamWidth;
-                note.stem.setVisibility(true).setStemlet(true, totalBeamWidth + stemlet_extension);
+            var stem = note.getStem();
+            if (stem) {
+                var stemX = note.getStemX();
+                var stemTipY = note.getStemExtents().topY;
+                var beamedStemTipY = this.getSlopeY(stemX, firstStemX, firstStemTipY, slope) + y_shift;
+                var preBeamExtension = stem.getExtension();
+                var beamExtension = stem_direction === stem_1.Stem.UP ? stemTipY - beamedStemTipY : beamedStemTipY - stemTipY;
+                stem.setExtension(preBeamExtension + beamExtension);
+                stem.renderHeightAdjustment = -stem_1.Stem.WIDTH / 2;
+                if (note.isRest() && show_stemlets) {
+                    var beamWidth = beam_width;
+                    var totalBeamWidth = (beam_count - 1) * beamWidth * 1.5 + beamWidth;
+                    stem.setVisibility(true).setStemlet(true, totalBeamWidth + stemlet_extension);
+                }
+            }
+            else {
+                throw new vex_1.Vex.RERR('NoStem', 'stem undefined.');
             }
         }
     };
@@ -1932,16 +1944,16 @@ var Beam = /** @class */ (function (_super) {
     // Get the x coordinates for the beam lines of specific `duration`
     Beam.prototype.getBeamLines = function (duration) {
         var tick_of_duration = tables_1.Flow.durationToTicks(duration);
-        var beam_lines = [];
         var beam_started = false;
-        var current_beam = null;
+        var beam_lines = [];
+        var current_beam = undefined;
         var partial_beam_length = this.render_options.partial_beam_length;
         var previous_should_break = false;
         var tick_tally = 0;
         for (var i = 0; i < this.notes.length; ++i) {
             var note = this.notes[i];
             // See if we need to break secondary beams on this note.
-            var ticks = note.ticks.value();
+            var ticks = note.getTicks().value();
             tick_tally += ticks;
             var should_break = false;
             // 8th note beams are always drawn.
@@ -1984,7 +1996,7 @@ var Beam = /** @class */ (function (_super) {
                 }
                 else {
                     // No beam started yet. Start a new one.
-                    current_beam = { start: stem_x, end: null };
+                    current_beam = { start: stem_x, end: undefined };
                     beam_started = true;
                     if (beam_alone) {
                         // previous and next beam exists and does not get a beam but current gets it.
@@ -2036,17 +2048,16 @@ var Beam = /** @class */ (function (_super) {
         return beam_lines;
     };
     // Render the stems for each notes
-    Beam.prototype.drawStems = function () {
-        var _this = this;
+    Beam.prototype.drawStems = function (ctx) {
         this.notes.forEach(function (note) {
-            if (note.getStem()) {
-                note.getStem().setContext(_this.context).draw();
+            var stem = note.getStem();
+            if (stem) {
+                stem.setContext(ctx).draw();
             }
         }, this);
     };
     // Render the beam lines
-    Beam.prototype.drawBeamLines = function () {
-        this.checkContext();
+    Beam.prototype.drawBeamLines = function (ctx) {
         var valid_beam_durations = ['4', '8', '16', '32', '64'];
         var firstNote = this.notes[0];
         var beamY = this.getBeamYToDraw();
@@ -2061,14 +2072,19 @@ var Beam = /** @class */ (function (_super) {
                 var startBeamX = beam_line.start;
                 var startBeamY = this.getSlopeY(startBeamX, firstStemX, beamY, this.slope);
                 var lastBeamX = beam_line.end;
-                var lastBeamY = this.getSlopeY(lastBeamX, firstStemX, beamY, this.slope);
-                this.context.beginPath();
-                this.context.moveTo(startBeamX, startBeamY);
-                this.context.lineTo(startBeamX, startBeamY + beamThickness);
-                this.context.lineTo(lastBeamX + 1, lastBeamY + beamThickness);
-                this.context.lineTo(lastBeamX + 1, lastBeamY);
-                this.context.closePath();
-                this.context.fill();
+                if (lastBeamX) {
+                    var lastBeamY = this.getSlopeY(lastBeamX, firstStemX, beamY, this.slope);
+                    ctx.beginPath();
+                    ctx.moveTo(startBeamX, startBeamY);
+                    ctx.lineTo(startBeamX, startBeamY + beamThickness);
+                    ctx.lineTo(lastBeamX + 1, lastBeamY + beamThickness);
+                    ctx.lineTo(lastBeamX + 1, lastBeamY);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                else {
+                    throw new vex_1.Vex.RERR('NoLastBeamX', 'lastBeamX undefined.');
+                }
             }
             beamY += beamThickness * 1.5;
         }
@@ -2095,16 +2111,16 @@ var Beam = /** @class */ (function (_super) {
     };
     // Render the beam to the canvas context
     Beam.prototype.draw = function () {
-        this.checkContext();
+        var ctx = this.checkContext();
         this.setRendered();
         if (this.unbeamable)
             return;
         if (!this.postFormatted) {
             this.postFormat();
         }
-        this.drawStems();
+        this.drawStems(ctx);
         this.applyStyle();
-        this.drawBeamLines();
+        this.drawBeamLines(ctx);
         this.restoreStyle();
     };
     return Beam;
@@ -5095,7 +5111,7 @@ var system_1 = __webpack_require__(/*! ./system */ "./src/system.js");
 var tickcontext_1 = __webpack_require__(/*! ./tickcontext */ "./src/tickcontext.ts");
 var tuplet_1 = __webpack_require__(/*! ./tuplet */ "./src/tuplet.js");
 var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.js");
-var beam_1 = __webpack_require__(/*! ./beam */ "./src/beam.js");
+var beam_1 = __webpack_require__(/*! ./beam */ "./src/beam.ts");
 var curve_1 = __webpack_require__(/*! ./curve */ "./src/curve.js");
 var gracenote_1 = __webpack_require__(/*! ./gracenote */ "./src/gracenote.js");
 var gracenotegroup_1 = __webpack_require__(/*! ./gracenotegroup */ "./src/gracenotegroup.ts");
@@ -9080,8 +9096,8 @@ exports.BravuraMetrics = {
                 offsetYBaseStemDown: 4,
             },
             noteheadHalf: {
-                offsetYBaseStemUp: -2.5,
-                offsetYBaseStemDown: 2.6,
+                offsetYBaseStemUp: -2.55,
+                offsetYBaseStemDown: 2.65,
             },
             noteheadBlack: {
                 offsetYBaseStemUp: -2,
@@ -10591,8 +10607,8 @@ exports.GonvilleMetrics = {
                 offsetYBaseStemDown: 1.5,
             },
             noteheadBlack: {
-                offsetYBaseStemUp: -2,
-                offsetYBaseStemDown: 2,
+                offsetYBaseStemUp: -1.5,
+                offsetYBaseStemDown: 1.5,
             },
             noteheadSquareWhite: {
                 offsetYBaseStemDown: -5,
@@ -14159,6 +14175,10 @@ exports.PetalumaMetrics = {
                 offsetYBaseStemUp: -4,
                 offsetYBaseStemDown: 4,
             },
+            noteheadHalf: {
+                offsetYBaseStemDown: 1.8,
+                offsetYBaseStemUp: -1.8,
+            },
             noteheadBlack: {
                 offsetYBaseStemDown: 2,
                 offsetYBaseStemUp: -2,
@@ -14266,14 +14286,14 @@ exports.PetalumaMetrics = {
         noteHead: {
             standard: {
                 noteheadBlackStemUp: {
-                    shiftX: 1.5,
+                    shiftX: 1.625,
                     point: 34,
                 },
                 noteheadBlackStemDown: {
                     point: 34,
                 },
                 noteheadHalfStemUp: {
-                    shiftX: 1,
+                    shiftX: 1.725,
                     point: 34,
                 },
                 noteheadHalfStemDown: {
@@ -16318,7 +16338,7 @@ var __assign = (this && this.__assign) || function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Formatter = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
-var beam_1 = __webpack_require__(/*! ./beam */ "./src/beam.js");
+var beam_1 = __webpack_require__(/*! ./beam */ "./src/beam.ts");
 var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
 var fraction_1 = __webpack_require__(/*! ./fraction */ "./src/fraction.ts");
 var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.js");
@@ -18245,7 +18265,7 @@ var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
 var modifier_1 = __webpack_require__(/*! ./modifier */ "./src/modifier.ts");
 var formatter_1 = __webpack_require__(/*! ./formatter */ "./src/formatter.js");
 var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.js");
-var beam_1 = __webpack_require__(/*! ./beam */ "./src/beam.js");
+var beam_1 = __webpack_require__(/*! ./beam */ "./src/beam.ts");
 var stavetie_1 = __webpack_require__(/*! ./stavetie */ "./src/stavetie.js");
 var tabtie_1 = __webpack_require__(/*! ./tabtie */ "./src/tabtie.js");
 var stavenote_1 = __webpack_require__(/*! ./stavenote */ "./src/stavenote.ts");
@@ -18526,7 +18546,7 @@ var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemod
 var stavetempo_1 = __webpack_require__(/*! ./stavetempo */ "./src/stavetempo.js");
 var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.js");
 var accidental_1 = __webpack_require__(/*! ./accidental */ "./src/accidental.js");
-var beam_1 = __webpack_require__(/*! ./beam */ "./src/beam.js");
+var beam_1 = __webpack_require__(/*! ./beam */ "./src/beam.ts");
 var stavetie_1 = __webpack_require__(/*! ./stavetie */ "./src/stavetie.js");
 var tabstave_1 = __webpack_require__(/*! ./tabstave */ "./src/tabstave.ts");
 var tabnote_1 = __webpack_require__(/*! ./tabnote */ "./src/tabnote.js");
@@ -25466,12 +25486,37 @@ var StaveNote = /** @class */ (function (_super) {
             var _d = this.getNoteHeadBounds(), y_top = _d.y_top, y_bottom = _d.y_bottom;
             var noteStemHeight = (_b = (_a = this.stem) === null || _a === void 0 ? void 0 : _a.getHeight()) !== null && _b !== void 0 ? _b : 0;
             var flagX = this.getStemX();
-            // RONYEH HACK
-            if (this.getStemDirection() === stem_1.Stem.DOWN) {
-              flagX -= 0.06;
-            } else {
-              flagX += 0.02;
+            //////////////////////////////////////////////////////////////////////////////////////////////////
+            // HACK HACK HACK!!!
+            switch (this.musicFont.getName()) {
+                case 'Bravura':
+                default:
+                    if (this.getStemDirection() === stem_1.Stem.DOWN) {
+                        // Bravura down stem flags need no adjustment!
+                    }
+                    else {
+                        flagX += 0.02; // Bravura up stem flags need a rightward adjustment.
+                    }
+                    break;
+                case 'Petaluma':
+                    if (this.getStemDirection() === stem_1.Stem.DOWN) {
+                        // Petaluma down stem flags need no adjustment!
+                    }
+                    else {
+                        flagX -= 0.06; // Petaluma up stems flags need a leftward adjustment.
+                    }
+                    break;
+                case 'Gonville':
+                    if (this.getStemDirection() === stem_1.Stem.DOWN) {
+                        flagX -= 0.06; // Gonville down stem flags need a small leftward adjustment
+                    }
+                    else {
+                        flagX += 0.03; // Gonville up stem flags need a tiny rightward adjustment
+                    }
+                    break;
             }
+            // END HACK
+            //////////////////////////////////////////////////////////////////////////////////////////////////
             // FIXME: What's with the magic +/- 2
             // ANSWER: a corner of the note stem pokes out beyond the tip of the flag.
             // The extra +/- 2 pushes the flag glyph outward so it covers the stem entirely.
@@ -28249,6 +28294,7 @@ var Flow = {
     integerToNote: integerToNote,
     durationToTicks: durationToTicks,
     durationToFraction: durationToFraction,
+    durationToNumber: durationToNumber,
     getGlyphProps: getGlyphProps,
 };
 exports.Flow = Flow;
@@ -28870,7 +28916,9 @@ function durationToFraction(duration) {
     return new fraction_1.Fraction().parse(Flow.sanitizeDuration(duration));
 }
 // Convert the `duration` to an number
-Flow.durationToNumber = function (duration) { return Flow.durationToFraction(duration).value(); };
+function durationToNumber(duration) {
+    return durationToFraction(duration).value();
+}
 // Convert the `duration` to total ticks
 function durationToTicks(duration) {
     duration = Flow.sanitizeDuration(duration);
