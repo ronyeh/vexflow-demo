@@ -55,9 +55,6 @@ function drawStave() {
         case 3:
             test3();
             break;
-        case 4:
-            test4();
-            break;
     }
 
     // We can change the CSS style of a note!
@@ -70,6 +67,7 @@ function drawStave() {
 }
 
 function test1() {
+    console.log("TEST 1");
     vf = new VF.Factory({ renderer: { elementId: "stave", width: 800, height: 400 } });
     score = vf.EasyScore({ throwOnError: true });
     system = vf.System();
@@ -79,6 +77,7 @@ function test1() {
 }
 
 function test2() {
+    console.log("TEST 2");
     vf = new VF.Factory({ renderer: { elementId: "stave", width: 800, height: 400 } });
     score = vf.EasyScore({ throwOnError: true });
     system = vf.System();
@@ -97,10 +96,9 @@ function test2() {
         .addTimeSignature("4/4");
 }
 
-function test3() {}
-
 // Taken from https://raw.githubusercontent.com/0xfe/vexflow/master/tests/bach_tests.js
-function test4() {
+function test3() {
+    console.log("TEST 3");
     function concat(a, b) {
         return a.concat(b);
     }
