@@ -1,16 +1,9 @@
 const NUM_NOTE_GROUPS = 8;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-// Handle the query params.
-const urlParams = new URLSearchParams(window.location.search);
-let vexVersion = urlParams.get("vex_version"); // vexflow.version.number || current
-let scriptSRC = "";
-if (vexVersion === null || vexVersion.startsWith("3")) {
-    vexVersion = VEX_RELEASE_VERSION;
-    scriptSRC = `https://unpkg.com/vexflow@${vexVersion}/releases/vexflow-debug.js`;
-} else {
-    scriptSRC = `/js/vexflow-${vexVersion}.js?` + Math.random();
-}
+// Get query params from main.js
+let { vexVersion, scriptSRC } = getVexURL();
+
 let font = urlParams.get("font"); // bravura (default) || petaluma || gonville
 if (font !== "petaluma" && font !== "gonville") {
     font = "bravura";
