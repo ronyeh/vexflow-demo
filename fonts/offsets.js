@@ -79,7 +79,7 @@ function reload() {
 
 function getURLWithCurrentQueryParams() {
     return (
-        window.location.protocol + "//" + window.location.host + window.location.pathname + `?vex_version=${vexVersion}&font=${font}&scale=${scale}&context_type=${backend}&visual_debug=${visualDebug}&rot=${rotateNotesOffset}&offset_x=${offsetX}&offset_y=${offsetY}`
+        window.location.protocol + "//" + window.location.host + window.location.pathname + `?vex_version=${vexVersion}&font=${font}&scale=${scale}&backend=${backend}&visual_debug=${visualDebug}&rot=${rotateNotesOffset}&offset_x=${offsetX}&offset_y=${offsetY}`
     );
 }
 
