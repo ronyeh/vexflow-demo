@@ -21450,9 +21450,7 @@ function L() {
 }
 exports.X = vex_1.Vex.MakeException('ParserError');
 var NO_ERROR_POS = -1;
-var numCallsToFlatten = 0;
 function flattenMatches(r) {
-    numCallsToFlatten++;
     if ('matchedString' in r)
         return r.matchedString; // string
     if ('results' in r)
@@ -21485,7 +21483,6 @@ var Parser = /** @class */ (function () {
         this.errorPos = NO_ERROR_POS;
         var result = this.expect(this.grammar.begin());
         result.errorPos = this.errorPos;
-        console.log(numCallsToFlatten);
         return result;
     };
     Parser.prototype.matchFail = function (returnPos) {
