@@ -21437,9 +21437,8 @@ exports.Ornament = Ornament;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Parser = exports.X = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
-// END: Move to easyscore.ts
-//////////////////////////////////////////////////////////////////////////////////////////////////
 // To enable logging for this class. Set `Vex.Flow.Parser.DEBUG` to `true`.
+// eslint-disable-next-line
 function L() {
     var args = [];
     for (var _i = 0; _i < arguments.length; _i++) {
@@ -21450,6 +21449,11 @@ function L() {
 }
 exports.X = vex_1.Vex.MakeException('ParserError');
 var NO_ERROR_POS = -1;
+// Converts parser results into an easy to reference list that can be
+// used in triggers. This function returns:
+// - nested array in which the leaf elements are string or null
+// - string (including empty strings)
+// - null
 function flattenMatches(r) {
     if ('matchedString' in r)
         return r.matchedString; // string
@@ -21459,7 +21463,7 @@ function flattenMatches(r) {
     if (results.length === 1)
         return flattenMatches(results[0]);
     if (results.length === 0)
-        return null; // null
+        return null;
     return results.map(flattenMatches); // nested array
 }
 // This is the base parser class. Given an arbitrary context-free grammar, it
@@ -21467,14 +21471,14 @@ function flattenMatches(r) {
 // when a string is terminated.)
 var Parser = /** @class */ (function () {
     // For an example of a simple grammar, take a look at tests/parser_tests.js or
-    // the EasyScore grammar in easyscore.js.
+    // the EasyScore grammar in easyscore.ts.
     function Parser(grammar) {
         this.grammar = grammar;
         this.line = '';
         this.pos = 0;
         this.errorPos = NO_ERROR_POS;
     }
-    // Parse `line` using current grammar. Returns {success: true} if the
+    // Parse `line` using current grammar. Returns `{success: true}` if the
     // line parsed correctly, otherwise returns `{success: false, errorPos: N}`
     // where `errorPos` is the location of the error in the string.
     Parser.prototype.parse = function (line) {
@@ -21518,7 +21522,7 @@ var Parser = /** @class */ (function () {
     // Execute rule to match a sequence of tokens (or rules). If `maybe` is
     // set, then return success even if the token is not found, but reset
     // the position before exiting.
-    // TODO: expectOne(...) is never called with the 'maybe' parameter.
+    // TODO: expectOne(...) is never called with the `maybe` parameter.
     Parser.prototype.expectOne = function (rule, maybe) {
         if (maybe === void 0) { maybe = false; }
         var results = [];
@@ -21528,8 +21532,8 @@ var Parser = /** @class */ (function () {
         maybe = maybe === true || rule.maybe === true;
         // Execute all sub rules in sequence.
         if (rule.expect) {
-            for (var i = 0; i < rule.expect.length; i++) {
-                var next = rule.expect[i];
+            for (var _i = 0, _a = rule.expect; _i < _a.length; _i++) {
+                var next = _a[_i];
                 var localPos = this.pos;
                 var result = this.expect(next);
                 // If `rule.or` is set, then return success if any one
@@ -21550,8 +21554,8 @@ var Parser = /** @class */ (function () {
             }
         }
         var gotOne = (rule.or && oneMatch) || allMatches;
-        var numMatches = gotOne ? 1 : 0;
         var success = gotOne || maybe === true;
+        var numMatches = gotOne ? 1 : 0;
         if (maybe && !gotOne)
             this.pos = pos;
         if (success) {
@@ -21575,9 +21579,8 @@ var Parser = /** @class */ (function () {
             if (result.success && result.results) {
                 numMatches++;
                 // TODO: Is it okay to use the spread operator here to flatten the results?
-                // It fixes a TypeScript error, and seems help reduce the number of calls to flattenMatches()
+                // It fixes a TypeScript error and reduces the number of calls to flattenMatches().
                 results.push.apply(results, result.results);
-                // results.push(result.results);
             }
             else {
                 more = false;
@@ -21626,7 +21629,7 @@ var Parser = /** @class */ (function () {
             }
         }
         else if (rule.expect) {
-            // A parser rule has a `expect` property.
+            // A parser rule has an `expect` property.
             if (rule.oneOrMore) {
                 result = this.expectOneOrMore(rule);
             }
@@ -21645,7 +21648,11 @@ var Parser = /** @class */ (function () {
         // mapped to `state.matches` in the `run: (state) => ...` trigger.
         result.matches = [];
         if (result.results) {
-            result.results.forEach(function (r) { return result.matches.push(flattenMatches(r)); });
+            result.results.forEach(function (r) {
+                if (result.matches) {
+                    result.matches.push(flattenMatches(r));
+                }
+            });
         }
         if (rule.run && result.success) {
             rule.run(result);
