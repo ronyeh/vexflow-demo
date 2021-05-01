@@ -21644,18 +21644,17 @@ var Parser = /** @class */ (function () {
             throw new exports.X('Bad grammar! No `token` or `expect` property', rule);
         }
         // If there's a trigger attached to this rule, then run it.
-        // Make the matches accessible through `result.matches`, which is
-        // mapped to `state.matches` in the `run: (state) => ...` trigger.
-        result.matches = [];
+        // Make the matches accessible through `state.matches` in the
+        // `run: (state) => ...` trigger.
+        var matches = [];
+        result.matches = matches;
         if (result.results) {
             result.results.forEach(function (r) {
-                if (result.matches) {
-                    result.matches.push(flattenMatches(r));
-                }
+                matches.push(flattenMatches(r));
             });
         }
         if (rule.run && result.success) {
-            rule.run(result);
+            rule.run({ matches: matches });
         }
         return result;
     };
