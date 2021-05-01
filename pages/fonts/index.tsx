@@ -1,10 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>Fonts</title>
-        <script src="https://unpkg.com/vue@3.0.11/dist/vue.global.prod.js"></script>
-        <link rel="stylesheet" href="/css/main.css" />
+import Head from "next/head";
+
+const title = "Fonts";
+
+export default function FontsPage() {
+    return (
+        <>
+            <Head>
+                <title>{title}</title>
+                <link rel="icon" href="/favicon.ico" />
+            </Head>
+            <h1>{title}</h1>
+            <ul>
+                <li>
+                    <a href="fonts/">Fonts</a>
+                </li>
+                <li>
+                    <a href="easyscore/">EasyScore</a>
+                </li>
+                <li>
+                    <a href="registry/">Registry</a>
+                </li>
+            </ul>
+        </>
+    );
+}
+
+/*
+
+
+
+
+<title>Fonts</title>
         <script src="/js/main.js"></script>
     </head>
     <body>
@@ -47,3 +73,6 @@
             </script>
     </body>
 </html>
+
+
+*/
