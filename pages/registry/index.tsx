@@ -19,7 +19,7 @@ export default function RegistryPage() {
             const testURL = `/registry/test?vex_version=${v}&test_number=${i}`;
             links.push(
                 <li key={"li_" + i + "_" + v}>
-                    <a className={styles.testlink} href={testURL} target="_blank">
+                    <a className="testlink" href={testURL} target="_blank">
                         {v}
                     </a>
                 </li>
@@ -33,8 +33,6 @@ export default function RegistryPage() {
             </li>
         );
     }
-
-    useEffect(() => {}, []);
 
     return (
         <>

@@ -44,3 +44,22 @@ svg {
 canvas {
     background-color: white;
 }
+
+.testlink {
+    font-weight: bold;
+}
+
+.spacer {
+    width: 10px;
+    display: inline-block;
+}
+
+.back-button {
+    color: gray;
+    text-decoration: none;
+}
+
+.stave-container {
+    overflow: auto;
+    width: 100%;
+}

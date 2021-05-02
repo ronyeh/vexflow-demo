@@ -29,8 +29,6 @@ namespace Tests {
                 break;
         }
         factory.draw();
-        // returns a SVG group. only available after factory.draw() is called.
-        // document.getElementById("vf-note-39412");
     }
 
     export function cleanup() {
@@ -59,6 +57,12 @@ namespace Tests {
         testButtonHandler = () => {
             console.log(n);
         };
+
+        setTimeout(() => {
+            // returns a SVG group. only available after factory.draw() is called.
+            const svgElement = document.getElementById("vf-note-1");
+            console.log(svgElement);
+        }, 1000);
     }
 
     function test1() {
@@ -98,22 +102,24 @@ namespace Tests {
         console.log("TEST 2");
 
         let stave = system.addStave({
-            voices: [easyscore.voice(easyscore.notes("C4/q, G4[stem='up',id='note-39412']"), { time: "2/4" })],
+            voices: [easyscore.voice(easyscore.notes("C4/q[id='note-0'], A4[stem='up',id='note-1']"), { time: "2/4" })],
         });
 
-        const n1 = registry.getElementById("note-39412"); // StaveNote!
-        n1.setStyle({
-            fillStyle: "#F00",
+        const n0 = registry.getElementById("note-0"); // StaveNote!
+        n0.setStyle({
+            fillStyle: "#FF0000",
         });
-        n1.addClass("suck");
-        console.log(n1);
+        n0.addClass("awesome-note");
+
+        const n1 = registry.getElementById("note-1"); // StaveNote!
+        n1.setStyle({
+            fillStyle: "#00FF00",
+        });
+        n1.addClass("awesome-note");
 
         testButtonHandler = () => {
-            let n = registry.getElementById("note-39412"); // StaveNote!
-            console.log(n.hasClass("suck"));
-            n = registry.getElementById("auto1001"); // StaveNote!
-            console.log(n);
-            console.log(n.hasClass("suck"));
+            const n = registry.getElementById("note-0"); // StaveNote!
+            console.log("Same Note?", n === n0);
         };
     }
 }

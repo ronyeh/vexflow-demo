@@ -11,7 +11,7 @@ export default function TestPage({ queryParams }) {
     const title = `Registry Test ${testNumber} - ${vexVersion}`;
 
     useEffect(() => {
-        Tests.runTest(testNumber);
+        Tests.runTest(parseInt(testNumber));
         return function cleanup() {
             Tests.cleanup();
         };
@@ -41,20 +41,7 @@ export default function TestPage({ queryParams }) {
             <div className="stave-container">
                 <div id="stave"></div>
             </div>
-            <style jsx>{`
-                .spacer {
-                    width: 10px;
-                    display: inline-block;
-                }
-                .back-button {
-                    color: gray;
-                    text-decoration: none;
-                }
-                .stave-container {
-                    overflow: auto;
-                    width: 100%;
-                }
-            `}</style>
+            <style jsx>{``}</style>
         </>
     );
 }

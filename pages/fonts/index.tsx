@@ -1,78 +1,83 @@
+import App, { Constants } from "app/app";
 import Head from "next/head";
+import Link from "next/link";
 
 const title = "Fonts";
 
+const fonts = ["Bravura", "Petaluma", "Gonville"];
+const NUM_TESTS = 3;
+
 export default function FontsPage() {
+    const testItems = [];
+    const vexVersions = [Constants.VEX_RELEASE_VERSION, "current"];
+    if (App.isLocalHost()) {
+        vexVersions.push("localhost");
+    }
+    for (let i = 0; i < NUM_TESTS; i++) {
+        const links = [];
+        const fontName = fonts[i];
+        const fontNameLowerCase = fontName.toLowerCase();
+        vexVersions.forEach((v) => {
+            const testURL = `/fonts/offsets?vex_version=${v}&font=${fontNameLowerCase}`;
+            const vexURL = `/js/vexflow-${v}.js`;
+
+            links.push(
+                <li key={"li_" + i + "_" + v}>
+                    <a className="testlink" href={testURL} target="_blank">
+                        {v}
+                    </a>{" "}
+                    <a className="src_code" href={vexURL} target="_blank">
+                        »
+                    </a>
+                </li>
+            );
+        });
+
+        testItems.push(
+            <li key={"li_" + i}>
+                <div key={"div_" + i}>Test {i}</div>
+                <ul key={"ul_" + i}>{links}</ul>
+            </li>
+        );
+    }
+
     return (
         <>
             <Head>
                 <title>{title}</title>
                 <link rel="icon" href="/favicon.ico" />
             </Head>
-            <h1>{title}</h1>
-            <ul>
-                <li>
-                    <a href="fonts/">Fonts</a>
-                </li>
-                <li>
-                    <a href="easyscore/">EasyScore</a>
-                </li>
-                <li>
-                    <a href="registry/">Registry</a>
-                </li>
-            </ul>
+            <h1>
+                <Link href="/">
+                    <a className="back-button">↖️</a>
+                </Link>
+                <div className="spacer" />
+                {title}
+            </h1>
+            <h2>Note Head, Stem, and Flag Offsets</h2>
+            <p>
+                Open the test pages below and switch between browser tabs to compare.
+                <br />
+                See the{" "}
+                <a href="/images/font_sample.svg" target="_blank">
+                    Bravura & Petaluma font sample
+                </a>{" "}
+                generated with this{" "}
+                <a href="/images/font_sample.afdesign" target="_blank">
+                    Affinity Designer file
+                </a>
+                .<br />
+                See the{" "}
+                <a href="/images/lilypond-gonville.svg" target="_blank">
+                    Gonville font sample
+                </a>{" "}
+                generated with this{" "}
+                <a href="/images/score.ly" target="_blank">
+                    LilyPond score
+                </a>
+                .
+            </p>
+            <ul>{testItems}</ul>
         </>
     );
 }
-
-/*
-
-
-
-
-<title>Fonts</title>
-        <script src="/js/main.js"></script>
-    </head>
-    <body>
-        <h1>Fonts</h1>
-        <h2>Note Head, Stem, and Flag Offsets</h2>
-        <p>
-            Open the test pages below and switch between browser tabs to compare.<br />
-            See the <a href="/images/font_sample.svg" target="_blank">Bravura & Petaluma font sample</a> generated with this <a href="/images/font_sample.afdesign" target="_blank">Affinity Designer file</a>.<br/>
-            See the <a href="/images/lilypond-gonville.svg" target="_blank">Gonville font sample</a> generated with this <a href="/images/score.ly" target="_blank">LilyPond score</a>.
-        </p>
-        <div id="test-links">
-            <ul>
-                <test0></test0>
-                <br />
-                <test1></test1>
-                <br />
-                <test2></test2>
-            </ul>
-        </div>
-        <script>
-            const vex_version = "3.0.9";
-
-            const fonts = ["Bravura", "Petaluma", "Gonville"];
-
-            const app = Vue.createApp({});
-
-            for (let i=0; i<3; i++) {
-                const fontName = fonts[i];
-                const fontNameLowerCase = fontName.toLowerCase();
-                const releaseTest = `<li><a href="/fonts/offsets.html?vex_version=${vex_version}&font=${fontNameLowerCase}" target="_blank">${fontName} test</a> with VexFlow ${vex_version} <a class="src_code" href="https://unpkg.com/vexflow@${vex_version}/releases/vexflow-debug.js" target="_blank">❯</a></li>`;
-                const currentBuildTest = `<li><a href="/fonts/offsets.html?vex_version=current&font=${fontNameLowerCase}" target="_blank">${fontName} test</a> with current build <a class="src_code" href="/js/vexflow-current.js" target="_blank">❯</a></li>`;
-                const localHostDevTest = isLocalHost() ? `<li><a href="/fonts/offsets.html?vex_version=localhost&font=${fontNameLowerCase}" target="_blank">${fontName} test</a> with localhost dev build <a class="src_code" href="/js/vexflow-localhost.js" target="_blank">❯</a></li>` : "";
-
-                app.component('test'+i, {
-                    template: `${releaseTest}${currentBuildTest}${localHostDevTest}`,
-                });
-            }
-
-            app.mount('#test-links')
-            </script>
-    </body>
-</html>
-
-
-*/
