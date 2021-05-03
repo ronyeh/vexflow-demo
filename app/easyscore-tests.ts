@@ -1,99 +1,80 @@
 namespace Tests {
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    // Get query params from main.js
-    let { vexVersion, scriptSRC } = getVexURL();
-
-    let testNumber = parseInt(urlParams.get("test_number"));
-    if (isNaN(testNumber)) {
-        testNumber = 0;
-    }
-
-    // info: `VexFlow: ${vexVersion}`,
-    // document.title = `Test ${testNumber}` + " - " + vexVersion;
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    // VexFlow - Draw the test notes.
-
-    function onVexFlowLoaded() {
-        drawStave();
-    }
+    export const TITLE = "EasyScore";
+    export const NUM_TESTS = 3;
 
     let VF;
-    let vf;
-    let score;
+    let factory;
+    let easyscore;
     let system;
+    let testButtonHandler;
+    let registry;
 
-    function drawStave() {
+    export function runTest(num: number) {
         VF = Vex.Flow;
-
-        switch (testNumber) {
-            case 1:
+        factory = new VF.Factory({ renderer: { elementId: "stave", width: 800, height: 400 } });
+        easyscore = factory.EasyScore({ throwOnError: true });
+        system = factory.System();
+        switch (num) {
+            case 0:
             default:
+                test0();
+                break;
+            case 1:
                 test1();
                 break;
             case 2:
                 test2();
                 break;
-            case 3:
-                test3();
-                break;
         }
+        factory.draw();
+    }
 
-        // We can change the CSS style of a note!
-        // document.getElementById("vf-note-id-39412").style.opacity = 0.3;
-        // document.querySelector("#vf-note-id-39412 .vf-stem path").style.stroke = "red"
-        // document.querySelector("#vf-note-id-39412 .vf-notehead path").style.fill = "cyan"
-        // document.querySelector("#vf-note-id-39412 .vf-modifiers path").style.fill = "magenta"
+    // We can change the CSS style of a note!
+    // document.getElementById("vf-note-id-39412").style.opacity = 0.3;
+    // document.querySelector("#vf-note-id-39412 .vf-stem path").style.stroke = "red"
+    // document.querySelector("#vf-note-id-39412 .vf-notehead path").style.fill = "cyan"
+    // document.querySelector("#vf-note-id-39412 .vf-modifiers path").style.fill = "magenta"
 
-        vf.draw();
+    function test0() {
+        console.log("TEST 0");
+        system.addStave({
+            voices: [easyscore.voice(easyscore.notes("C5/w"))],
+        });
     }
 
     function test1() {
         console.log("TEST 1");
-        vf = new VF.Factory({ renderer: { elementId: "stave", width: 800, height: 400 } });
-        score = vf.EasyScore({ throwOnError: true });
-        system = vf.System();
-        system.addStave({
-            voices: [score.voice(score.notes("C5/w"))],
-        });
-    }
-
-    function test2() {
-        console.log("TEST 2");
-        vf = new VF.Factory({ renderer: { elementId: "stave", width: 800, height: 400 } });
-        score = vf.EasyScore({ throwOnError: true });
-        system = vf.System();
         system
             .addStave({
-                voices: [score.voice(score.notes("C#5/q, B4, A4, G#4[stem='up',id='note-id-39412']"))],
+                voices: [easyscore.voice(easyscore.notes("C#5/q, B4, A4, G#4[stem='up',id='note-id-39412']"))],
             })
             .addClef("treble")
             .addTimeSignature("4/4");
 
         system
             .addStave({
-                voices: [score.voice(score.notes("C#3/q, B2, A2, G#2", { clef: "bass" }))],
+                voices: [easyscore.voice(easyscore.notes("C#3/q, B2, A2, G#2", { clef: "bass" }))],
             })
             .addClef("bass")
             .addTimeSignature("4/4");
     }
 
     // Taken from https://raw.githubusercontent.com/0xfe/vexflow/master/tests/bach_tests.js
-    function test3() {
-        console.log("TEST 3");
+    function test2() {
+        console.log("TEST 2");
         function concat(a, b) {
             return a.concat(b);
         }
 
         vf = new VF.Factory({ renderer: { elementId: "stave", width: 1150, height: 800 } });
-        score = vf.EasyScore({ throwOnError: true });
+        easyscore = vf.EasyScore({ throwOnError: true });
 
         var registry = new VF.Registry();
         VF.Registry.enableDefaultRegistry(registry);
 
-        var v = score.voice.bind(score);
-        var n = score.notes.bind(score);
-        var b = score.beam.bind(score);
+        var v = easyscore.voice.bind(easyscore);
+        var n = easyscore.notes.bind(easyscore);
+        var b = easyscore.beam.bind(easyscore);
 
         var x = 100;
         var y = 80;
@@ -107,7 +88,7 @@ namespace Tests {
             return registry.getElementById(id);
         }
 
-        score.set({ time: "3/4" });
+        easyscore.set({ time: "3/4" });
 
         /*  Measure 1 */
         var system = makeSystem(220);
@@ -248,7 +229,7 @@ namespace Tests {
 
         system.addStave({ voices: [v(n('A4/h.[id="m8c"]'))] });
         system.addStave({
-            voices: [score.set({ clef: "bass" }).voice([n('D4/q[id="m8a"]'), b(n('D3/8, C4, B3[id="m8b"], A3', { stem: "down" }))].reduce(concat))],
+            voices: [easyscore.set({ clef: "bass" }).voice([n('D4/q[id="m8a"]'), b(n('D3/8, C4, B3[id="m8b"], A3', { stem: "down" }))].reduce(concat))],
         });
         system.addConnector("singleRight");
 
@@ -274,7 +255,7 @@ namespace Tests {
         /*  Measure 9 */
         system = makeSystem(180);
         system.addStave({
-            voices: [score.set({ clef: "treble" }).voice([n('D5/q[id="m9a"]'), b(n("G4/8, A4, B4, C5", { stem: "up" }))].reduce(concat))],
+            voices: [easyscore.set({ clef: "treble" }).voice([n('D5/q[id="m9a"]'), b(n("G4/8, A4, B4, C5", { stem: "up" }))].reduce(concat))],
         });
 
         system.addStave({ voices: [v(n("B3/h, A3/q", { clef: "bass" }))] });
@@ -319,7 +300,7 @@ namespace Tests {
         system.addStave({ voices: [v(n('G5/q[id="m12a"], G4[id="m12b"], G4[id="m12c"]'))] });
 
         system.addStave({
-            voices: [score.set({ clef: "bass" }).voice([n('B3/q[id="m12d"]'), b(n('C4/8, B3, A3, G3[id="m12e"]', { stem: "down" }))].reduce(concat))],
+            voices: [easyscore.set({ clef: "bass" }).voice([n('B3/q[id="m12d"]'), b(n('C4/8, B3, A3, G3[id="m12e"]', { stem: "down" }))].reduce(concat))],
         });
         system.addConnector("singleRight");
 
@@ -348,7 +329,7 @@ namespace Tests {
         system = makeSystem(220);
         system
             .addStave({
-                voices: [score.set({ clef: "treble" }).voice([n('c5/q[id="m13a"]'), b(n("d5/8, c5, b4, a4", { stem: "down" }))].reduce(concat))],
+                voices: [easyscore.set({ clef: "treble" }).voice([n('c5/q[id="m13a"]'), b(n("d5/8, c5, b4, a4", { stem: "down" }))].reduce(concat))],
             })
             .addClef("treble")
             .addKeySignature("G");
@@ -369,7 +350,7 @@ namespace Tests {
         /*  Measure 14 */
         system = makeSystem(180);
         system.addStave({
-            voices: [score.set({ clef: "treble" }).voice([n("B4/q"), b(n("C5/8, b4, a4, g4", { stem: "up" }))].reduce(concat))],
+            voices: [easyscore.set({ clef: "treble" }).voice([n("B4/q"), b(n("C5/8, b4, a4, g4", { stem: "up" }))].reduce(concat))],
         });
 
         system.addStave({ voices: [v(n('g3/h[id="m14a"], b3/q[id="m14b"]', { clef: "bass" }))] });
@@ -381,7 +362,7 @@ namespace Tests {
         /*  Measure 15 */
         system = makeSystem(180);
         system.addStave({
-            voices: [score.set({ clef: "treble" }).voice([n("a4/q"), b(n('b4/8, a4, g4, f4[id="m15a"]', { stem: "up" }))].reduce(concat))],
+            voices: [easyscore.set({ clef: "treble" }).voice([n("a4/q"), b(n('b4/8, a4, g4, f4[id="m15a"]', { stem: "up" }))].reduce(concat))],
         });
 
         system.addStave({ voices: [v(n('c4/q[id="m15b"], d4, d3', { clef: "bass" }))] });
@@ -394,7 +375,7 @@ namespace Tests {
         system = makeSystem(130);
         system
             .addStave({
-                voices: [score.set({ clef: "treble" }).voice([n('g4/h.[id="m16a"]')].reduce(concat))],
+                voices: [easyscore.set({ clef: "treble" }).voice([n('g4/h.[id="m16a"]')].reduce(concat))],
             })
             .setEndBarType(VF.Barline.type.REPEAT_END);
 
@@ -421,7 +402,7 @@ namespace Tests {
         system = makeSystem(180);
         system
             .addStave({
-                voices: [score.set({ clef: "treble" }).voice([n('b5/q[id="m17a"]'), b(n("g5/8, a5, b5, g5", { stem: "down" }))].reduce(concat)), v([vf.TextDynamics({ text: "mf", duration: "h", dots: 1, line: 10 })])],
+                voices: [easyscore.set({ clef: "treble" }).voice([n('b5/q[id="m17a"]'), b(n("g5/8, a5, b5, g5", { stem: "down" }))].reduce(concat)), v([vf.TextDynamics({ text: "mf", duration: "h", dots: 1, line: 10 })])],
             })
             .setBegBarType(VF.Barline.type.REPEAT_BEGIN);
 
@@ -435,7 +416,7 @@ namespace Tests {
         /* Measure 18 */
         system = makeSystem(180);
         system.addStave({
-            voices: [score.set({ clef: "treble" }).voice([n('a5/q[id="m18a"]'), b(n('d5/8, e5, f5, d5[id="m18b"]', { stem: "down" }))].reduce(concat))],
+            voices: [easyscore.set({ clef: "treble" }).voice([n('a5/q[id="m18a"]'), b(n('d5/8, e5, f5, d5[id="m18b"]', { stem: "down" }))].reduce(concat))],
         });
 
         system.addStave({ voices: [v(n("f3/h.", { clef: "bass" }))] });

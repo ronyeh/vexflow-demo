@@ -1,4 +1,5 @@
 import App, { Constants } from "app/app";
+import Spacer from "app/components/Spacer";
 import Tests from "app/font-tests";
 import Head from "next/head";
 import Link from "next/link";
@@ -41,7 +42,7 @@ export default function OffsetsPage({ queryParams }) {
                 <Link href="/">
                     <a className="back-button">↖️</a>
                 </Link>
-                <div className="spacer" />
+                <Spacer />
                 {title}
             </h1>
             <div>{info}</div>
@@ -51,16 +52,16 @@ export default function OffsetsPage({ queryParams }) {
                 <button onClick={() => Tests.reloadWithScale(4)}>4x</button>
                 <button onClick={() => Tests.reloadWithScale(8)}>8x</button>
                 <button onClick={() => Tests.reloadWithScale(16)}>16x</button>
-                <div className="spacer" />
+                <Spacer />
                 Backend: <button onClick={() => Tests.reloadWithBackend("svg")}>SVG</button>
                 <button onClick={() => Tests.reloadWithBackend("canvas")}>CANVAS</button>
-                <div className="spacer" />
+                <Spacer />
                 Visual Debug: <button onClick={() => Tests.reloadWithVisualDebug(true)}>ON</button>
                 <button onClick={() => Tests.reloadWithVisualDebug(false)}>OFF</button>
-                <div className="spacer" />
+                <Spacer />
                 VexFlow Version: <button onClick={() => Tests.reloadWithVexRelease()}>{Constants.VEX_RELEASE_VERSION}</button>
                 <button onClick={() => Tests.reloadWithVexCurrent()}>Current</button>
-                <div className="spacer" />
+                <Spacer />
                 <button onClick={() => Tests.rotateNotes()}>Rotate Notes</button>
             </div>
             <br />

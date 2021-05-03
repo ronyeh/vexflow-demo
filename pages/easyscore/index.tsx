@@ -1,21 +1,13 @@
-import Head from "next/head";
+import Build from "app/build";
+import ListOfTests from "app/components/ListOfTests";
+import Tests from "app/easyscore-tests";
 
-const title = "EasyScore";
-
-export default function EasyScorePage() {
-    return (
-        <>
-            <Head>
-                <title>{title}</title>
-                <link rel="icon" href="/favicon.ico" />
-            </Head>
-            <h1>{title}</h1>
-            <ul></ul>
-        </>
-    );
+export default function EasyScorePage({ vexFiles }) {
+    return <ListOfTests title={Tests.TITLE} numTests={Tests.NUM_TESTS} vexFiles={vexFiles} />;
 }
 
-/*
-`./test/?vex_version=${vexVersion}&test_number=${this.n}`,
-`<li><a :href="test_url" target="_blank">Test {{n}}</a> with ${vexVersion} <a class="src_code" href="${getVexURL(vexVersion)}" target="_blank">❯</a></li>`,
-*/
+export async function getStaticProps(context) {
+    return {
+        props: { vexFiles: await Build.getArrayOfVexFlowJSFiles() },
+    };
+}

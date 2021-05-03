@@ -7,7 +7,7 @@ body {
 }
 
 h1 {
-    font-size: 26px;
+    font-size: 30px;
     line-height: 1.2;
 }
 h2 {
@@ -43,11 +43,6 @@ svg {
 
 canvas {
     background-color: white;
-}
-
-.spacer {
-    width: 10px;
-    display: inline-block;
 }
 
 .back-button {

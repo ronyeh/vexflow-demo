@@ -1,11 +1,11 @@
 import App, { Constants } from "app/app";
+import Spacer from "app/components/Spacer";
 import Head from "next/head";
 import Link from "next/link";
 
 const title = "Fonts";
 
 const fonts = ["Bravura", "Petaluma", "Gonville"];
-const NUM_TESTS = 3;
 
 export default function FontsPage() {
     const testItems = [];
@@ -13,7 +13,7 @@ export default function FontsPage() {
     if (App.isLocalHost()) {
         vexVersions.push("localhost");
     }
-    for (let i = 0; i < NUM_TESTS; i++) {
+    for (let i = 0; i < fonts.length; i++) {
         const links = [];
         const fontName = fonts[i];
         const fontNameLowerCase = fontName.toLowerCase();
@@ -34,10 +34,12 @@ export default function FontsPage() {
         });
 
         testItems.push(
-            <li key={"li_" + i}>
-                <div key={"div_" + i}>Test {i}</div>
+            <>
+                <h3 key={"div_" + i}>
+                    Test {i} - {fonts[i].charAt(0).toUpperCase() + fonts[i].substr(1).toLowerCase()}
+                </h3>
                 <ul key={"ul_" + i}>{links}</ul>
-            </li>
+            </>
         );
     }
 
@@ -51,7 +53,7 @@ export default function FontsPage() {
                 <Link href="/">
                     <a className="back-button">↖️</a>
                 </Link>
-                <div className="spacer" />
+                <Spacer />
                 {title}
             </h1>
             <h2>Note Head, Stem, and Flag</h2>
@@ -77,7 +79,7 @@ export default function FontsPage() {
                 </a>
                 .
             </p>
-            <ul>{testItems}</ul>
+            {testItems}
         </>
     );
 }

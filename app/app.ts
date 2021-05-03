@@ -30,6 +30,18 @@ namespace App {
             return path + "/";
         }
     }
+
+    // Search through the vexFiles array for an appropriate JS file to load on the client side.
+    export function getVexFlowJSFileForCurrentPath(pathname, vexFiles): string {
+        const pathParts = pathname.split("/");
+        const parentPathName = pathParts[pathParts.length - 1];
+        const vexVersionForCurrentPath = "current-" + parentPathName;
+        if (vexFiles.includes(vexVersionForCurrentPath + ".js")) {
+            return vexVersionForCurrentPath;
+        } else {
+            return "current";
+        }
+    }
 }
 
 export { Constants };

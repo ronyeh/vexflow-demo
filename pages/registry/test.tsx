@@ -3,11 +3,12 @@ import Link from "next/link";
 import App, { Constants } from "app/app";
 import { useEffect } from "react";
 import Tests from "app/registry-tests";
+import Spacer from "app/components/Spacer";
 
 export default function TestPage({ queryParams }) {
     const { vexVersion, vexURL } = App.getVexVersionAndURL(queryParams);
     const testNumber = queryParams.test_number;
-    const title = `Registry Test ${testNumber} - ${vexVersion}`;
+    const title = `Registry - ${testNumber} - ${vexVersion}`;
 
     useEffect(() => {
         Tests.runTest(parseInt(testNumber));
@@ -31,7 +32,7 @@ export default function TestPage({ queryParams }) {
                 <Link href="/">
                     <a className="back-button">↖️</a>
                 </Link>
-                <div className="spacer" />
+                <Spacer />
                 {title}
             </h1>
 
