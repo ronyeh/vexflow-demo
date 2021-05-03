@@ -1,5 +1,4 @@
 import Head from "next/head";
-import styles from "./index.module.css";
 import Link from "next/link";
 
 const title = "VexFlow Demo";
@@ -14,17 +13,17 @@ export default function HomePage() {
             <h1>{title}</h1>
             <ul>
                 <li>
-                    <Link href="fonts/">
+                    <Link href="/fonts">
                         <a>Fonts</a>
                     </Link>
                 </li>
                 <li>
-                    <Link href="easyscore/">
+                    <Link href="/easyscore">
                         <a>EasyScore</a>
                     </Link>
                 </li>
                 <li>
-                    <Link href="registry/">
+                    <Link href="/registry">
                         <a>Registry</a>
                     </Link>
                 </li>

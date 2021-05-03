@@ -1,13 +1,9 @@
-import Build from "app/build";
+import Tests from "app/tests/Tests_Registry";
+import TestPageProps from "app/tests/TestPageProps";
 import ListOfTests from "app/components/ListOfTests";
-import Tests_Registry from "app/tests/Tests_Registry";
 
-export default function RegistryPage({ vexFiles }) {
-    return <ListOfTests vexFiles={vexFiles} testInfo={Tests_Registry.getInfo()} />;
+export default function Page({ vexFiles }) {
+    return <ListOfTests vexFiles={vexFiles} testInfo={Tests.getInfo()} />;
 }
 
-export async function getStaticProps(context) {
-    return {
-        props: { vexFiles: await Build.getArrayOfVexFlowJSFiles() },
-    };
-}
+export const getStaticProps = TestPageProps.getStaticProps;

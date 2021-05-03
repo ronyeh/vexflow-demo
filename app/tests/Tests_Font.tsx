@@ -1,16 +1,18 @@
-import { Constants } from "../app";
+import App, { Constants } from "../app";
 import TestInfo from "./TestInfo";
 
 namespace Tests_Font {
+    const allowedFonts = ["bravura", "petaluma", "gonville"];
     export function getInfo(): TestInfo {
         const info = new TestInfo();
-        info.title = "Registry";
+        info.title = "Font";
         const testNumbers = [0, 1, 2];
         info.numTests = testNumbers.length;
-        info.descriptions = testNumbers.map((test) => `VexFlow: ${vexVersion}, Font: ${font}, Scale: ${scale}x, Backend: ${backend}`);
+        info.testDescriptions = testNumbers.map((testNum) => allowedFonts[testNum].toUpperCase());
         return info;
     }
 
+    let currentTestNumber = 0;
     let font;
     let backend;
     let scale;
@@ -21,23 +23,27 @@ namespace Tests_Font {
     let vexVersion;
     let debouncedSaveScrollOffsets;
 
-    export function runTest(num: number) {
+    export function runTest() {
         debouncedSaveScrollOffsets = createDebouncedSaveScrollOffsets();
         window.addEventListener("scroll", debouncedSaveScrollOffsets);
     }
 
-    export function setVexVersion(ver) {
-        vexVersion = ver;
+    export function getMessage() {
+        return `VexFlow: ${vexVersion}, Font: ${font}, Scale: ${scale}x, Backend: ${backend}`;
     }
 
-    export function processQueryParams(queryParams) {
+    export function processQueryParams(queryParams, vexInfo) {
         if (!queryParams) {
             return;
         }
-        // Each test case has defaults that can be overridden.
+
+        vexVersion = vexInfo.vexVersion;
+
+        currentTestNumber = queryParams.test_number;
+
+        // Each test case has a default font that can be overridden by the 'font' query parameter.
         let defaultFont = "bravura";
-        const allowedFonts = ["bravura", "petaluma", "gonville"];
-        switch (queryParams.test_number) {
+        switch (currentTestNumber) {
             case 0:
             default:
                 defaultFont = "bravura";

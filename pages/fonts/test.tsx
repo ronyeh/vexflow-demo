@@ -1,20 +1,19 @@
 import App, { Constants } from "app/app";
 import Spacer from "app/components/Spacer";
-import Tests from "app/font-tests";
+import Tests from "app/tests/Tests_Font";
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useEffect } from "react";
 
-const fonts = ["Bravura", "Petaluma", "Gonville"];
-const NUM_TESTS = 3;
+export default function TestPage() {
+    const router = useRouter();
+    const vexInfo = App.getVexVersionAndURL(router.query);
+    Tests.processQueryParams(router.query, vexInfo);
 
-export default function OffsetsPage({ queryParams }) {
-    const { vexVersion, vexURL } = App.getVexVersionAndURL(queryParams);
-
-    Tests.processQueryParams(queryParams);
     const title = Tests.getTitle();
     const info = Tests.getInfo();
-    const testNumber = queryParams.test_number;
+    const message = Tests.getMessage();
 
     let staveElement;
     if (Tests.isCanvasBackend()) {
@@ -24,8 +23,7 @@ export default function OffsetsPage({ queryParams }) {
     }
 
     useEffect(() => {
-        Tests.setVexVersion(vexVersion);
-        Tests.runTest(testNumber);
+        Tests.runTest();
         return function cleanup() {
             Tests.cleanup();
         };
@@ -36,16 +34,16 @@ export default function OffsetsPage({ queryParams }) {
             <Head>
                 <title>{title}</title>
                 <link rel="icon" href="/favicon.ico" />
-                <script src={vexURL}></script>
+                <script src={vexInfo.vexURL}></script>
             </Head>
             <h1>
-                <Link href="/">
+                <Link href="/fonts">
                     <a className="back-button">↖️</a>
                 </Link>
                 <Spacer />
                 {title}
             </h1>
-            <div>{info}</div>
+            <div>{message}</div>
             <div>
                 Scale: <button onClick={() => Tests.reloadWithScale(1)}>1x</button>
                 <button onClick={() => Tests.reloadWithScale(2)}>2x</button>
@@ -70,10 +68,4 @@ export default function OffsetsPage({ queryParams }) {
             </div>
         </>
     );
-}
-
-export async function getServerSideProps(context) {
-    return {
-        props: { queryParams: context.query }, // will be passed to the page component as props
-    };
 }

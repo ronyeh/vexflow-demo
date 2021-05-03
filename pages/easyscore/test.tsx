@@ -4,10 +4,13 @@ import App, { Constants } from "app/app";
 import { useEffect } from "react";
 import Tests from "app/tests/Tests_EasyScore";
 import Spacer from "app/components/Spacer";
+import { useRouter } from "next/router";
 
-export default function TestPage({ queryParams }) {
+export default function TestPage() {
+    const router = useRouter();
+    const queryParams = router.query;
     const { vexVersion, vexURL } = App.getVexVersionAndURL(queryParams);
-    const testNumber = queryParams.test_number;
+    const testNumber = queryParams.test_number as string;
     const title = `EasyScore - ${testNumber} - ${vexVersion}`;
 
     const info = `VexFlow: ${vexVersion}`;
@@ -25,7 +28,7 @@ export default function TestPage({ queryParams }) {
                 <script src={vexURL}></script>
             </Head>
             <h1>
-                <Link href="/">
+                <Link href="/easyscore">
                     <a className="back-button">↖️</a>
                 </Link>
                 <Spacer />
@@ -39,10 +42,4 @@ export default function TestPage({ queryParams }) {
             <style jsx>{``}</style>
         </>
     );
-}
-
-export async function getServerSideProps(context) {
-    return {
-        props: { queryParams: context.query }, // will be passed to the page component as props
-    };
 }

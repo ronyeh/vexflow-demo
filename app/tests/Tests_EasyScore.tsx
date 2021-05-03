@@ -7,7 +7,7 @@ namespace Tests_EasyScore {
         info.title = "EasyScore";
         const tests = [test0, test1, test2];
         info.numTests = tests.length;
-        info.descriptions = tests.map((test) => test.description ?? "");
+        info.testDescriptions = tests.map((test) => test.description ?? "");
         return info;
     }
 

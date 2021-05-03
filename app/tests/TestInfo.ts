@@ -1,15 +1,17 @@
 export default class TestInfo {
-    numTests: number;
     title: string;
-    descriptions?: string[];
+    numTests: number;
+
+    pageDescription?: JSX.Element;
+    testDescriptions?: string[];
 
     getTitle() {
         return this.title;
     }
 
-    getDescription(testNum: number) {
-        if (this.descriptions && this.descriptions.length > testNum && testNum >= 0) {
-            return this.descriptions[testNum];
+    getTestDescription(testNum: number) {
+        if (this.testDescriptions && this.testDescriptions.length > testNum && testNum >= 0) {
+            return this.testDescriptions[testNum];
         } else {
             return "";
         }

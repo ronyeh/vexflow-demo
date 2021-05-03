@@ -1,13 +1,9 @@
-import Build from "app/build";
+import Tests from "app/tests/Tests_EasyScore";
+import TestPageProps from "app/tests/TestPageProps";
 import ListOfTests from "app/components/ListOfTests";
-import Tests_EasyScore from "app/tests/Tests_EasyScore";
 
-export default function EasyScorePage({ vexFiles }) {
-    return <ListOfTests vexFiles={vexFiles} testInfo={Tests_EasyScore.getInfo()} />;
+export default function Page({ vexFiles }) {
+    return <ListOfTests vexFiles={vexFiles} testInfo={Tests.getInfo()} />;
 }
 
-export async function getStaticProps(context) {
-    return {
-        props: { vexFiles: await Build.getArrayOfVexFlowJSFiles() },
-    };
-}
+export const getStaticProps = TestPageProps.getStaticProps;
