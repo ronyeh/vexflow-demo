@@ -1,6 +1,7 @@
-import App from "app/app";
-
 namespace Tests {
+    export const TITLE = "Registry";
+    export const NUM_TESTS = 3;
+
     let VF;
     let factory;
     let easyscore;

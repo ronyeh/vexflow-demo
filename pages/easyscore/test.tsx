@@ -1,34 +1,24 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>EasyScore</title>
-        <link rel="stylesheet" href="/css/main.css" />
-        <script src="https://unpkg.com/vue@3.0.11/dist/vue.global.prod.js"></script>
-        <script src="/js/main.js"></script>
-        <style>
-            .stave-container {
-                overflow: auto;
-                width: 100%;
-            }
-            svg {
-                background-color: white;
-            }
-            canvas {
-                background-color: white;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>EasyScore</h1>
-        <div id="app">
-            <div>{{ info }}</div>
-            <div>
-            </div>
-            <br />
-            <div class="stave-container">
-                <div id="stave"></div>
-            </div>
-        </div>
-        <script src="test.js"></script>
-    </body>
-</html>
+/*
+<title>EasyScore</title>
+<style>
+    .stave-container {
+        overflow: auto;
+        width: 100%;
+    }
+    svg {
+        background-color: white;
+    }
+    canvas {
+        background-color: white;
+    }
+</style>
+<div id="app">
+    <div>{{ info }}</div>
+    <div>
+    </div>
+    <br />
+    <div class="stave-container">
+        <div id="stave"></div>
+    </div>
+</div>
+*/

@@ -2,7 +2,6 @@ import Head from "next/head";
 import Link from "next/link";
 import App, { Constants } from "app/app";
 import { useEffect } from "react";
-import styles from "./index.module.css";
 import Tests from "app/registry-tests";
 
 export default function TestPage({ queryParams }) {

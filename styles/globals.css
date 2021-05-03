@@ -45,10 +45,6 @@ canvas {
     background-color: white;
 }
 
-.testlink {
-    font-weight: bold;
-}
-
 .spacer {
     width: 10px;
     display: inline-block;
