@@ -18,7 +18,7 @@ export default function FontsPage() {
         const fontName = fonts[i];
         const fontNameLowerCase = fontName.toLowerCase();
         vexVersions.forEach((v) => {
-            const testURL = `/fonts/offsets?vex_version=${v}&font=${fontNameLowerCase}`;
+            const testURL = `/fonts/test?vex_version=${v}&font=${fontNameLowerCase}`;
             const vexURL = `/js/vexflow-${v}.js`;
 
             links.push(
@@ -54,7 +54,7 @@ export default function FontsPage() {
                 <div className="spacer" />
                 {title}
             </h1>
-            <h2>Note Head, Stem, and Flag Offsets</h2>
+            <h2>Note Head, Stem, and Flag</h2>
             <p>
                 Open the test pages below and switch between browser tabs to compare.
                 <br />

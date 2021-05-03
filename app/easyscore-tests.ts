@@ -8,27 +8,8 @@ namespace Tests {
         testNumber = 0;
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    // Vue.js :-)
-    const AppRoot = {
-        data() {
-            return {
-                info: `VexFlow: ${vexVersion}`,
-            };
-        },
-        mounted() {
-            document.title = `Test ${testNumber}` + " - " + vexVersion;
-            addScriptTag(scriptSRC, onVexFlowLoaded);
-        },
-
-        beforeUnmount() {},
-
-        methods: {},
-    };
-
-    const app = Vue.createApp(AppRoot);
-
-    app.mount("#app");
+    // info: `VexFlow: ${vexVersion}`,
+    // document.title = `Test ${testNumber}` + " - " + vexVersion;
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // VexFlow - Draw the test notes.
