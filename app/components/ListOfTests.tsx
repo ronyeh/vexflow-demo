@@ -4,23 +4,27 @@ import App, { Constants } from "app/app";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Spacer from "./Spacer";
+import TestInfo from "app/tests/TestInfo";
 
 interface Props {
-    title: string;
-    numTests: number;
     vexFiles: string[];
+    testInfo: TestInfo;
 }
 
-export default function ListOfTests({ title, numTests, vexFiles }: Props) {
+export default function ListOfTests({ vexFiles, testInfo }: Props) {
     const router = useRouter();
+
+    const title = testInfo.getTitle();
 
     const testItems = [];
     const [showLocalHostTests, setShowLocalHostTests] = useState(false);
     const vexVersions = [Constants.VEX_RELEASE_VERSION, App.getVexFlowJSFileForCurrentPath(router.pathname, vexFiles), "localhost"];
-    for (let i = 0; i < numTests; i++) {
+    for (let testNum = 0; testNum < testInfo.numTests; testNum++) {
+        const testDescription = testInfo.getDescription(testNum);
         const links = [];
         vexVersions.forEach((vexVer, vexVerIndex) => {
-            const testURL = `./test?vex_version=${vexVer}&test_number=${i}`;
+            const testURL = `./test?vex_version=${vexVer}&test_number=${testNum}`;
+            const vexURL = `/js/vexflow-${vexVer}.js`;
             let style = {};
             if (vexVer === "localhost") {
                 if (showLocalHostTests) {
@@ -32,13 +36,18 @@ export default function ListOfTests({ title, numTests, vexFiles }: Props) {
             links.push(
                 <span key={vexVerIndex} style={style}>
                     <a href={testURL}>{vexVer}</a>
-                    {vexVerIndex < vexVersions.length - 1 ? <Spacer /> : ""}
+                    <Spacer width={4} />
+                    <a className="src_code" href={vexURL} target="_blank">
+                        »
+                    </a>
+                    {vexVerIndex < vexVersions.length - 1 ? <Spacer width={30} /> : ""}
                 </span>
             );
         });
         testItems.push(
             <>
-                <h2 key={i}>Test {i}</h2>
+                <h2 key={testNum}>Test {testNum}</h2>
+                <p key={testNum}>{testDescription}</p>
                 {links}
             </>
         );

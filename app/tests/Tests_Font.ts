@@ -1,6 +1,16 @@
-import { Constants } from "./app";
+import { Constants } from "../app";
+import TestInfo from "./TestInfo";
 
-namespace Tests {
+namespace Tests_Font {
+    export function getInfo(): TestInfo {
+        const info = new TestInfo();
+        info.title = "Registry";
+        const testNumbers = [0, 1, 2];
+        info.numTests = testNumbers.length;
+        info.descriptions = testNumbers.map((test) => `VexFlow: ${vexVersion}, Font: ${font}, Scale: ${scale}x, Backend: ${backend}`);
+        return info;
+    }
+
     let font;
     let backend;
     let scale;
@@ -11,6 +21,11 @@ namespace Tests {
     let vexVersion;
     let debouncedSaveScrollOffsets;
 
+    export function runTest(num: number) {
+        debouncedSaveScrollOffsets = createDebouncedSaveScrollOffsets();
+        window.addEventListener("scroll", debouncedSaveScrollOffsets);
+    }
+
     export function setVexVersion(ver) {
         vexVersion = ver;
     }
@@ -19,8 +34,24 @@ namespace Tests {
         if (!queryParams) {
             return;
         }
-        font = queryParams.font; // bravura (default) || petaluma || gonville
-        if (font !== "petaluma" && font !== "gonville") {
+        // Each test case has defaults that can be overridden.
+        let defaultFont = "bravura";
+        const allowedFonts = ["bravura", "petaluma", "gonville"];
+        switch (queryParams.test_number) {
+            case 0:
+            default:
+                defaultFont = "bravura";
+                break;
+            case 1:
+                defaultFont = "petaluma";
+                break;
+            case 2:
+                defaultFont = "gonville";
+                break;
+        }
+        font = queryParams.font ?? defaultFont; // bravura (default) || petaluma || gonville
+        // Validate the input.
+        if (!allowedFonts.includes(font)) {
             font = "bravura";
         }
         backend = queryParams.backend; // svg (default) | canvas
@@ -57,15 +88,6 @@ namespace Tests {
 
     export function getTitle() {
         return font + " - " + vexVersion;
-    }
-
-    export function getInfo() {
-        return `VexFlow: ${vexVersion}, Font: ${font}, Scale: ${scale}x, Backend: ${backend}`;
-    }
-
-    export function runTest() {
-        debouncedSaveScrollOffsets = createDebouncedSaveScrollOffsets();
-        window.addEventListener("scroll", debouncedSaveScrollOffsets);
     }
 
     export function cleanup() {
@@ -266,4 +288,4 @@ namespace Tests {
     }
 }
 
-export default Tests;
+export default Tests_Font;

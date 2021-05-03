@@ -19,16 +19,12 @@ export default function FontsPage() {
         const fontNameLowerCase = fontName.toLowerCase();
         vexVersions.forEach((v) => {
             const testURL = `/fonts/test?vex_version=${v}&font=${fontNameLowerCase}`;
-            const vexURL = `/js/vexflow-${v}.js`;
 
             links.push(
                 <li key={"li_" + i + "_" + v}>
                     <a className="testlink" href={testURL} target="_blank">
                         {v}
                     </a>{" "}
-                    <a className="src_code" href={vexURL} target="_blank">
-                        »
-                    </a>
                 </li>
             );
         });

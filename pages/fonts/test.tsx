@@ -13,8 +13,8 @@ export default function OffsetsPage({ queryParams }) {
 
     Tests.processQueryParams(queryParams);
     const title = Tests.getTitle();
-
     const info = Tests.getInfo();
+    const testNumber = queryParams.test_number;
 
     let staveElement;
     if (Tests.isCanvasBackend()) {
@@ -25,7 +25,7 @@ export default function OffsetsPage({ queryParams }) {
 
     useEffect(() => {
         Tests.setVexVersion(vexVersion);
-        Tests.runTest();
+        Tests.runTest(testNumber);
         return function cleanup() {
             Tests.cleanup();
         };

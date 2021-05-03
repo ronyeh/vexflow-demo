@@ -3,7 +3,7 @@ interface Props {
 }
 const Spacer = ({ width }: Props) => {
     if (width === undefined) {
-        width = 20;
+        width = 10;
     }
     return (
         <>

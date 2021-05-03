@@ -2,7 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 import App, { Constants } from "app/app";
 import { useEffect } from "react";
-import Tests from "app/easyscore-tests";
+import Tests from "app/tests/Tests_EasyScore";
 import Spacer from "app/components/Spacer";
 
 export default function TestPage({ queryParams }) {
