@@ -1,21 +1,18 @@
+import { GetServerSideProps } from "next";
+
 import App, { Constants } from "app/app";
 import Spacer from "app/components/Spacer";
 import Tests from "app/tests/Tests_Font";
 import Head from "next/head";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import { useEffect } from "react";
 
-export default function TestPage() {
-    const router = useRouter();
-    const vexInfo = App.getVexVersionAndURL(router.query);
-    Tests.processQueryParams(router.query, vexInfo);
-
-    const title = Tests.getTitle();
+export default function TestPage({ queryParams }) {
+    const vexInfo = App.getVexVersionAndURL(queryParams);
+    Tests.processQueryParams(queryParams, vexInfo);
     const info = Tests.getInfo();
     const message = Tests.getMessage();
-
-    let staveElement;
+    let staveElement = null;
     if (Tests.isCanvasBackend()) {
         staveElement = <canvas id="stave"></canvas>;
     } else {
@@ -32,7 +29,7 @@ export default function TestPage() {
     return (
         <>
             <Head>
-                <title>{title}</title>
+                <title>{info.title}</title>
                 <link rel="icon" href="/favicon.ico" />
                 <script src={vexInfo.vexURL}></script>
             </Head>
@@ -41,7 +38,7 @@ export default function TestPage() {
                     <a className="back-button">↖️</a>
                 </Link>
                 <Spacer />
-                {title}
+                {info.title}
             </h1>
             <div>{message}</div>
             <div>
@@ -69,3 +66,9 @@ export default function TestPage() {
         </>
     );
 }
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+    return {
+        props: { queryParams: context.query },
+    };
+};

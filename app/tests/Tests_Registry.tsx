@@ -14,7 +14,7 @@ namespace Tests_Registry {
         info.title = "Registry";
         const tests = [test0, test1, test2];
         info.numTests = tests.length;
-        info.pageDescription = <div>Hello</div>;
+        info.pageDescription = <div></div>;
         info.testDescriptions = tests.map((test) => test.description ?? "");
         return info;
     }

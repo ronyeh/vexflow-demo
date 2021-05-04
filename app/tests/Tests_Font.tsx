@@ -5,7 +5,32 @@ namespace Tests_Font {
     const allowedFonts = ["bravura", "petaluma", "gonville"];
     export function getInfo(): TestInfo {
         const info = new TestInfo();
-        info.title = "Font";
+        info.pageDescription = (
+            <p>
+                Open the test pages below and switch between browser tabs to compare.
+                <br />
+                See the{" "}
+                <a href="/images/font_sample.svg" target="_blank">
+                    Bravura &amp; Petaluma font sample
+                </a>{" "}
+                generated with this{" "}
+                <a href="/images/font_sample.afdesign" target="_blank">
+                    Affinity Designer file
+                </a>
+                .<br />
+                See the{" "}
+                <a href="/images/lilypond-gonville.svg" target="_blank">
+                    Gonville font sample
+                </a>{" "}
+                generated with this{" "}
+                <a href="/images/score.ly" target="_blank">
+                    LilyPond score
+                </a>
+                .
+            </p>
+        );
+
+        info.title = "Fonts";
         const testNumbers = [0, 1, 2];
         info.numTests = testNumbers.length;
         info.testDescriptions = testNumbers.map((testNum) => allowedFonts[testNum].toUpperCase());
@@ -26,6 +51,8 @@ namespace Tests_Font {
     export function runTest() {
         debouncedSaveScrollOffsets = createDebouncedSaveScrollOffsets();
         window.addEventListener("scroll", debouncedSaveScrollOffsets);
+        drawStave();
+        setTimeout(restoreScrollOffsets, 300); // The delay fixes a bug where the window.scroll(...) drifts by 1 pixel vertically upon every refresh! :-|
     }
 
     export function getMessage() {
@@ -37,10 +64,10 @@ namespace Tests_Font {
             return;
         }
 
+        console.log(JSON.stringify(queryParams));
         vexVersion = vexInfo.vexVersion;
 
-        currentTestNumber = queryParams.test_number;
-
+        currentTestNumber = parseInt(queryParams.test_number);
         // Each test case has a default font that can be overridden by the 'font' query parameter.
         let defaultFont = "bravura";
         switch (currentTestNumber) {
@@ -60,6 +87,8 @@ namespace Tests_Font {
         if (!allowedFonts.includes(font)) {
             font = "bravura";
         }
+        console.log(currentTestNumber + "_" + queryParams.font + "_" + defaultFont);
+        console.log(font);
         backend = queryParams.backend; // svg (default) | canvas
         if (!isCanvasBackend()) {
             backend = "svg";
@@ -92,7 +121,7 @@ namespace Tests_Font {
         }
     }
 
-    export function getTitle() {
+    function getTitle() {
         return font + " - " + vexVersion;
     }
 
@@ -205,11 +234,6 @@ namespace Tests_Font {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // VexFlow - Draw the test notes.
-
-    function onVexFlowLoaded() {
-        drawStave();
-        setTimeout(restoreScrollOffsets, 300); // The delay fixes a bug where the window.scroll(...) drifts by 1 pixel vertically upon every refresh! :-|
-    }
 
     function drawStave() {
         const VF = Vex.Flow;
