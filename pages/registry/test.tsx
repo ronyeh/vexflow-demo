@@ -5,11 +5,12 @@ import { useEffect } from "react";
 import Tests from "app/tests/Tests_Registry";
 import Spacer from "app/components/Spacer";
 import { useRouter } from "next/router";
+import { GetServerSideProps } from "next";
 
-export default function TestPage() {
-    const router = useRouter();
-    const { vexVersion, vexURL } = App.getVexVersionAndURL(router.query);
-    const testNumber = router.query.test_number as string;
+export default function TestPage({ queryParams }) {
+    const { vexVersion, vexURL } = App.getVexVersionAndURL(queryParams);
+
+    const testNumber = queryParams.test_number;
     const title = `Registry - ${testNumber} - ${vexVersion}`;
 
     useEffect(() => {
@@ -47,3 +48,9 @@ export default function TestPage() {
         </>
     );
 }
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+    return {
+        props: { queryParams: context.query },
+    };
+};

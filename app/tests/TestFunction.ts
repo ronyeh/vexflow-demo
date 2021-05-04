@@ -1,4 +1,4 @@
-class TestFunction extends Function {
+interface TestFunction extends Function {
     description?: string;
 }
 
