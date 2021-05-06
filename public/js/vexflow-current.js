@@ -1909,7 +1909,7 @@ var Beam = /** @class */ (function (_super) {
                 var preBeamExtension = stem.getExtension();
                 var beamExtension = stem_direction === stem_1.Stem.UP ? stemTipY - beamedStemTipY : beamedStemTipY - stemTipY;
                 stem.setExtension(preBeamExtension + beamExtension);
-                stem.renderHeightAdjustment = -stem_1.Stem.WIDTH / 2;
+                stem.adjustHeightForBeam();
                 if (note.isRest() && show_stemlets) {
                     var beamWidth = beam_width;
                     var totalBeamWidth = (beam_count - 1) * beamWidth * 1.5 + beamWidth;
@@ -2130,9 +2130,9 @@ exports.Beam = Beam;
 
 /***/ }),
 
-/***/ "./src/bend.js":
+/***/ "./src/bend.ts":
 /*!*********************!*\
-  !*** ./src/bend.js ***!
+  !*** ./src/bend.ts ***!
   \*********************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -2272,6 +2272,7 @@ var Bend = /** @class */ (function (_super) {
     Bend.prototype.setXShift = function (value) {
         this.x_shift = value;
         this.updateWidth();
+        return this;
     };
     Bend.prototype.setFont = function (font) {
         this.font = font;
@@ -2281,11 +2282,13 @@ var Bend = /** @class */ (function (_super) {
         return this.text;
     };
     Bend.prototype.updateWidth = function () {
+        // eslint-disable-next-line
         var that = this;
         function measure_text(text) {
             var text_width;
-            if (that.context) {
-                text_width = that.context.measureText(text).width;
+            var ctxThat = that.getContext();
+            if (ctxThat) {
+                text_width = ctxThat.measureText(text).width;
             }
             else {
                 text_width = tables_1.Flow.textWidth(text);
@@ -2295,7 +2298,7 @@ var Bend = /** @class */ (function (_super) {
         var total_width = 0;
         for (var i = 0; i < this.phrase.length; ++i) {
             var bend = this.phrase[i];
-            if ('width' in bend) {
+            if (bend.width != undefined) {
                 total_width += bend.width;
             }
             else {
@@ -2309,7 +2312,7 @@ var Bend = /** @class */ (function (_super) {
         return this;
     };
     Bend.prototype.draw = function () {
-        this.checkContext();
+        var ctx = this.checkContext();
         if (!(this.note && this.index != null)) {
             throw new vex_1.Vex.RERR('NoNoteForBend', "Can't draw bend without a note or index.");
         }
@@ -2318,9 +2321,13 @@ var Bend = /** @class */ (function (_super) {
         start.x += 3;
         start.y += 0.5;
         var x_shift = this.x_shift;
-        var ctx = this.context;
-        var bend_height = this.note.getStave().getYForTopText(this.text_line) + 3;
-        var annotation_y = this.note.getStave().getYForTopText(this.text_line) - 1;
+        var stave = this.note.getStave();
+        if (!stave) {
+            throw new vex_1.Vex.RERR('NoStaveForBend', "Can't draw bend without a stave.");
+        }
+        var bend_height = stave.getYForTopText(this.text_line) + 3;
+        var annotation_y = stave.getYForTopText(this.text_line) - 1;
+        // eslint-disable-next-line
         var that = this;
         function renderBend(x, y, width, height) {
             var cp_x = x + width;
@@ -2363,13 +2370,16 @@ var Bend = /** @class */ (function (_super) {
             ctx.fillText(text, render_x, annotation_y);
             ctx.restore();
         }
-        var last_bend = null;
+        var last_bend = undefined;
+        var last_bend_draw_width = 0;
         var last_drawn_width = 0;
         for (var i = 0; i < this.phrase.length; ++i) {
             var bend = this.phrase[i];
+            if (!bend.draw_width)
+                bend.draw_width = 0;
             if (i === 0)
                 bend.draw_width += x_shift;
-            last_drawn_width = bend.draw_width + (last_bend ? last_bend.draw_width : 0) - (i === 1 ? x_shift : 0);
+            last_drawn_width = bend.draw_width + last_bend_draw_width - (i === 1 ? x_shift : 0);
             if (bend.type === Bend.UP) {
                 if (last_bend && last_bend.type === Bend.UP) {
                     renderArrowHead(start.x, bend_height);
@@ -2391,8 +2401,12 @@ var Bend = /** @class */ (function (_super) {
             }
             renderText(start.x + last_drawn_width, bend.text);
             last_bend = bend;
+            last_bend_draw_width = bend.draw_width;
             last_bend.x = start.x;
             start.x += last_drawn_width;
+        }
+        if (!last_bend || last_bend.x == undefined) {
+            throw new vex_1.Vex.RERR('NoLastBendForBend', 'Internal error.');
         }
         // Final arrowhead and text
         if (last_bend.type === Bend.UP) {
@@ -2409,9 +2423,9 @@ exports.Bend = Bend;
 
 /***/ }),
 
-/***/ "./src/boundingbox.js":
+/***/ "./src/boundingbox.ts":
 /*!****************************!*\
-  !*** ./src/boundingbox.js ***!
+  !*** ./src/boundingbox.ts ***!
   \****************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -2466,6 +2480,7 @@ var BoundingBox = /** @class */ (function () {
     BoundingBox.prototype.move = function (x, y) {
         this.x += x;
         this.y += y;
+        return this;
     };
     BoundingBox.prototype.clone = function () {
         return BoundingBox.copy(this);
@@ -2501,9 +2516,9 @@ exports.BoundingBox = BoundingBox;
 
 /***/ }),
 
-/***/ "./src/boundingboxcomputation.js":
+/***/ "./src/boundingboxcomputation.ts":
 /*!***************************************!*\
-  !*** ./src/boundingboxcomputation.js ***!
+  !*** ./src/boundingboxcomputation.ts ***!
   \***************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -2531,6 +2546,12 @@ var BoundingBoxComputation = /** @class */ (function () {
         this.addPoint(x1, y1);
         this.addPoint(x2, y2);
     }
+    BoundingBoxComputation.prototype.getX1 = function () {
+        return this.x1;
+    };
+    BoundingBoxComputation.prototype.getY1 = function () {
+        return this.y1;
+    };
     BoundingBoxComputation.prototype.width = function () {
         return this.x2 - this.x1;
     };
@@ -2541,7 +2562,7 @@ var BoundingBoxComputation = /** @class */ (function () {
         // do nothing
     };
     BoundingBoxComputation.prototype.addPoint = function (x, y) {
-        if (x != null) {
+        if (x != undefined) {
             if (isNaN(this.x1) || isNaN(this.x2)) {
                 this.x1 = x;
                 this.x2 = x;
@@ -2551,7 +2572,7 @@ var BoundingBoxComputation = /** @class */ (function () {
             if (x > this.x2)
                 this.x2 = x;
         }
-        if (y != null) {
+        if (y != undefined) {
             if (isNaN(this.y1) || isNaN(this.y2)) {
                 this.y1 = y;
                 this.y2 = y;
@@ -2563,10 +2584,10 @@ var BoundingBoxComputation = /** @class */ (function () {
         }
     };
     BoundingBoxComputation.prototype.addX = function (x) {
-        this.addPoint(x, null);
+        this.addPoint(x, undefined);
     };
     BoundingBoxComputation.prototype.addY = function (y) {
-        this.addPoint(null, y);
+        this.addPoint(undefined, y);
     };
     BoundingBoxComputation.prototype.addQuadraticCurve = function (p0x, p0y, p1x, p1y, p2x, p2y) {
         var cp1x = p0x + (2 / 3) * (p1x - p0x); // CP1 = QP0 + 2/3 *(QP1-QP0)
@@ -3643,9 +3664,9 @@ exports.ChordSymbol = ChordSymbol;
 
 /***/ }),
 
-/***/ "./src/clef.js":
+/***/ "./src/clef.ts":
 /*!*********************!*\
-  !*** ./src/clef.js ***!
+  !*** ./src/clef.ts ***!
   \*********************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -3678,12 +3699,20 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Clef = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
-var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.js");
+var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.ts");
 var glyph_1 = __webpack_require__(/*! ./glyph */ "./src/glyph.ts");
 // To enable logging for this class, set `Vex.Flow.Clef.DEBUG` to `true`.
 function L() {
+    // eslint-disable-next-line
     var args = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
+    for (
+    // eslint-disable-next-line
+    var _i = 0; 
+    // eslint-disable-next-line
+    _i < arguments.length; 
+    // eslint-disable-next-line
+    _i++) {
+        // eslint-disable-next-line
         args[_i] = arguments[_i];
     }
     if (Clef.DEBUG)
@@ -3695,6 +3724,7 @@ var Clef = /** @class */ (function (_super) {
     // `Clef.types`.
     function Clef(type, size, annotation) {
         var _this = _super.call(this) || this;
+        _this.clef = Clef.types['treble'];
         _this.setAttribute('type', 'Clef');
         _this.setPosition(stavemodifier_1.StaveModifier.Position.BEGIN);
         _this.setType(type, size, annotation);
@@ -3808,6 +3838,8 @@ var Clef = /** @class */ (function (_super) {
         this.stave = stave;
         if (this.type !== 'tab')
             return this;
+        if (!this.glyph)
+            throw new vex_1.Vex.RERR('ClefError', "Can't set stave without glyph.");
         var numLines = this.stave.getOptions().num_lines;
         var point = this.musicFont.lookupMetric("clef.lineCount." + numLines + ".point");
         var shiftY = this.musicFont.lookupMetric("clef.lineCount." + numLines + ".shiftY");
@@ -3820,17 +3852,19 @@ var Clef = /** @class */ (function (_super) {
             throw new vex_1.Vex.RERR('ClefError', "Can't draw clef without x.");
         if (!this.stave)
             throw new vex_1.Vex.RERR('ClefError', "Can't draw clef without stave.");
+        if (!this.glyph)
+            throw new vex_1.Vex.RERR('ClefError', "Can't draw clef without glyph.");
         this.setRendered();
         this.glyph.setStave(this.stave);
-        this.glyph.setContext(this.stave.context);
+        this.glyph.setContext(this.stave.getContext());
         if (this.clef.line !== undefined) {
             this.placeGlyphOnLine(this.glyph, this.stave, this.clef.line);
         }
         this.glyph.renderToStave(this.x);
-        if (this.annotation !== undefined) {
+        if (this.annotation !== undefined && this.attachment !== undefined) {
             this.placeGlyphOnLine(this.attachment, this.stave, this.annotation.line);
             this.attachment.setStave(this.stave);
-            this.attachment.setContext(this.stave.context);
+            this.attachment.setContext(this.stave.getContext());
             this.attachment.renderToStave(this.x);
         }
     };
@@ -3841,9 +3875,9 @@ exports.Clef = Clef;
 
 /***/ }),
 
-/***/ "./src/clefnote.js":
+/***/ "./src/clefnote.ts":
 /*!*************************!*\
-  !*** ./src/clefnote.js ***!
+  !*** ./src/clefnote.ts ***!
   \*************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -3873,7 +3907,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClefNote = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var note_1 = __webpack_require__(/*! ./note */ "./src/note.ts");
-var clef_1 = __webpack_require__(/*! ./clef */ "./src/clef.js");
+var clef_1 = __webpack_require__(/*! ./clef */ "./src/clef.ts");
 var glyph_1 = __webpack_require__(/*! ./glyph */ "./src/glyph.ts");
 /** @constructor */
 var ClefNote = /** @class */ (function (_super) {
@@ -3881,7 +3915,11 @@ var ClefNote = /** @class */ (function (_super) {
     function ClefNote(type, size, annotation) {
         var _this = _super.call(this, { duration: 'b' }) || this;
         _this.setAttribute('type', 'ClefNote');
-        _this.setType(type, size, annotation);
+        _this.type = type;
+        _this.clef_obj = new clef_1.Clef(type, size, annotation);
+        _this.clef = _this.clef_obj.clef;
+        _this.glyph = new glyph_1.Glyph(_this.clef.code, _this.clef.point);
+        _this.setWidth(_this.glyph.getMetrics().width);
         // Note properties
         _this.ignore_ticks = true;
         return _this;
@@ -3905,8 +3943,8 @@ var ClefNote = /** @class */ (function (_super) {
         return this.clef;
     };
     ClefNote.prototype.setContext = function (context) {
-        this.context = context;
-        this.glyph.setContext(this.context);
+        _super.prototype.setContext.call(this, context);
+        this.glyph.setContext(this.getContext());
         return this;
     };
     ClefNote.prototype.getBoundingBox = function () {
@@ -3924,21 +3962,22 @@ var ClefNote = /** @class */ (function (_super) {
         return this;
     };
     ClefNote.prototype.draw = function () {
+        var _a;
         if (!this.stave)
             throw new vex_1.Vex.RERR('NoStave', "Can't draw without a stave.");
         if (!this.glyph.getContext()) {
-            this.glyph.setContext(this.context);
+            this.glyph.setContext(this.getContext());
         }
         this.setRendered();
         var abs_x = this.getAbsoluteX();
         this.glyph.setStave(this.stave);
-        this.glyph.setYShift(this.stave.getYForLine(this.clef.line) - this.stave.getYForGlyphs());
+        this.glyph.setYShift(this.stave.getYForLine((_a = this.clef.line) !== null && _a !== void 0 ? _a : 0) - this.stave.getYForGlyphs());
         this.glyph.renderToStave(abs_x);
         // If the Vex.Flow.Clef has an annotation, such as 8va, draw it.
         if (this.clef_obj.annotation !== undefined) {
             var attachment = new glyph_1.Glyph(this.clef_obj.annotation.code, this.clef_obj.annotation.point);
             if (!attachment.getContext()) {
-                attachment.setContext(this.context);
+                attachment.setContext(this.getContext());
             }
             attachment.setStave(this.stave);
             attachment.setYShift(this.stave.getYForLine(this.clef_obj.annotation.line) - this.stave.getYForGlyphs());
@@ -4490,13 +4529,13 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EasyScore = exports.X = void 0;
+exports.EasyScore = exports.Builder = exports.Grammar = exports.X = void 0;
 /* eslint max-classes-per-file: "off" */
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var stavenote_1 = __webpack_require__(/*! ./stavenote */ "./src/stavenote.ts");
-var parser_1 = __webpack_require__(/*! ./parser */ "./src/parser.js");
+var parser_1 = __webpack_require__(/*! ./parser */ "./src/parser.ts");
 var articulation_1 = __webpack_require__(/*! ./articulation */ "./src/articulation.js");
-var frethandfinger_1 = __webpack_require__(/*! ./frethandfinger */ "./src/frethandfinger.js");
+var frethandfinger_1 = __webpack_require__(/*! ./frethandfinger */ "./src/frethandfinger.ts");
 // To enable logging for this class. Set `Vex.Flow.EasyScore.DEBUG` to `true`.
 function L() {
     var args = [];
@@ -4680,6 +4719,7 @@ var Grammar = /** @class */ (function () {
     };
     return Grammar;
 }());
+exports.Grammar = Grammar;
 var Builder = /** @class */ (function () {
     function Builder(factory) {
         this.factory = factory;
@@ -4798,6 +4838,7 @@ var Builder = /** @class */ (function () {
     };
     return Builder;
 }());
+exports.Builder = Builder;
 function setId(_a, note) {
     var id = _a.id;
     if (id === undefined)
@@ -5104,7 +5145,7 @@ var articulation_1 = __webpack_require__(/*! ./articulation */ "./src/articulati
 var annotation_1 = __webpack_require__(/*! ./annotation */ "./src/annotation.js");
 var chordsymbol_1 = __webpack_require__(/*! ./chordsymbol */ "./src/chordsymbol.js");
 var formatter_1 = __webpack_require__(/*! ./formatter */ "./src/formatter.js");
-var frethandfinger_1 = __webpack_require__(/*! ./frethandfinger */ "./src/frethandfinger.js");
+var frethandfinger_1 = __webpack_require__(/*! ./frethandfinger */ "./src/frethandfinger.ts");
 var stringnumber_1 = __webpack_require__(/*! ./stringnumber */ "./src/stringnumber.js");
 var textdynamics_1 = __webpack_require__(/*! ./textdynamics */ "./src/textdynamics.js");
 var modifiercontext_1 = __webpack_require__(/*! ./modifiercontext */ "./src/modifiercontext.js");
@@ -5120,7 +5161,7 @@ var staveconnector_1 = __webpack_require__(/*! ./staveconnector */ "./src/stavec
 var system_1 = __webpack_require__(/*! ./system */ "./src/system.js");
 var tickcontext_1 = __webpack_require__(/*! ./tickcontext */ "./src/tickcontext.ts");
 var tuplet_1 = __webpack_require__(/*! ./tuplet */ "./src/tuplet.js");
-var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.js");
+var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.ts");
 var beam_1 = __webpack_require__(/*! ./beam */ "./src/beam.ts");
 var curve_1 = __webpack_require__(/*! ./curve */ "./src/curve.ts");
 var gracenote_1 = __webpack_require__(/*! ./gracenote */ "./src/gracenote.js");
@@ -5129,11 +5170,11 @@ var notesubgroup_1 = __webpack_require__(/*! ./notesubgroup */ "./src/notesubgro
 var easyscore_1 = __webpack_require__(/*! ./easyscore */ "./src/easyscore.js");
 var timesignote_1 = __webpack_require__(/*! ./timesignote */ "./src/timesignote.js");
 var keysignote_1 = __webpack_require__(/*! ./keysignote */ "./src/keysignote.ts");
-var clefnote_1 = __webpack_require__(/*! ./clefnote */ "./src/clefnote.js");
+var clefnote_1 = __webpack_require__(/*! ./clefnote */ "./src/clefnote.ts");
 var pedalmarking_1 = __webpack_require__(/*! ./pedalmarking */ "./src/pedalmarking.js");
 var textbracket_1 = __webpack_require__(/*! ./textbracket */ "./src/textbracket.js");
-var vibratobracket_1 = __webpack_require__(/*! ./vibratobracket */ "./src/vibratobracket.js");
-var ghostnote_1 = __webpack_require__(/*! ./ghostnote */ "./src/ghostnote.js");
+var vibratobracket_1 = __webpack_require__(/*! ./vibratobracket */ "./src/vibratobracket.ts");
+var ghostnote_1 = __webpack_require__(/*! ./ghostnote */ "./src/ghostnote.ts");
 var barnote_1 = __webpack_require__(/*! ./barnote */ "./src/barnote.js");
 var tabnote_1 = __webpack_require__(/*! ./tabnote */ "./src/tabnote.js");
 var tabstave_1 = __webpack_require__(/*! ./tabstave */ "./src/tabstave.ts");
@@ -8997,7 +9038,7 @@ exports.BravuraMetrics = {
                         line: -0.2,
                         shiftX: 8,
                     },
-                }
+                },
             },
             '8vb': {
                 smuflCode: 'timeSig8',
@@ -9010,7 +9051,7 @@ exports.BravuraMetrics = {
                     bass: {
                         line: 3.5,
                         shiftX: 1,
-                    }
+                    },
                 },
                 small: {
                     point: 16,
@@ -9021,9 +9062,9 @@ exports.BravuraMetrics = {
                     bass: {
                         line: 3.1,
                         shiftX: 0.5,
-                    }
-                }
-            }
+                    },
+                },
+            },
         },
         // These may no longer be necessary
         lineCount: {
@@ -9032,15 +9073,15 @@ exports.BravuraMetrics = {
             '6': { point: 32, shiftY: 1 },
             '5': { point: 30, shiftY: -6 },
             '4': { point: 23, shiftY: -12 },
-        }
+        },
     },
     pedalMarking: {
         up: {
-            point: 40
+            point: 40,
         },
         down: {
-            point: 34
-        }
+            point: 34,
+        },
     },
     // These are for numeric digits, such as in time signatures
     digits: {
@@ -9057,7 +9098,7 @@ exports.BravuraMetrics = {
         },
         articStaccatissimoBelow: {
             padding: 2,
-        }
+        },
     },
     tremolo: {
         default: {
@@ -9075,9 +9116,10 @@ exports.BravuraMetrics = {
             offsetYStemDown: 5,
             offsetXStemUp: 7,
             offsetXStemDown: 1,
-        }
+        },
     },
     stem: {
+        heightAdjustmentForFlag: -3,
         // These are stem (Y) offsets to the note heads. To shift the
         // noteheads (x-position) themselves, see glyphs.notehead.custom.
         noteHead: {
@@ -9116,8 +9158,8 @@ exports.BravuraMetrics = {
             noteheadSquareWhite: {
                 offsetYBaseStemDown: -5,
                 offsetYBaseStemUp: 5,
-            }
-        }
+            },
+        },
     },
     // Values under here are used by the Glyph class to reposition and rescale
     // glyphs based on their category. This should be the first stop for
@@ -9144,16 +9186,16 @@ exports.BravuraMetrics = {
             },
             staveTempo: {
                 shiftX: -1,
-            }
+            },
         },
         clef: {
             gClef: {
                 default: { scale: 1.1, shiftY: 1 },
-                small: { shiftY: 1.5 }
+                small: { shiftY: 1.5 },
             },
             fClef: {
-                default: { shiftY: -0.5 }
-            }
+                default: { shiftY: -0.5 },
+            },
         },
         ornament: {
             ornamentTurn: {
@@ -9171,7 +9213,7 @@ exports.BravuraMetrics = {
                 wiggly: {
                     shiftX: -1,
                     shiftY: 1,
-                }
+                },
             },
             arrowheadBlackUp: {
                 straight: {
@@ -9180,8 +9222,8 @@ exports.BravuraMetrics = {
                 wiggly: {
                     shiftX: -1,
                     shiftY: 1,
-                }
-            }
+                },
+            },
         },
         textNote: {
             point: 34,
@@ -9217,7 +9259,7 @@ exports.BravuraMetrics = {
             },
             ornamentShortTrill: {
                 shiftX: -8,
-            }
+            },
         },
         noteHead: {
             standard: {
@@ -9229,45 +9271,45 @@ exports.BravuraMetrics = {
                 },
             },
             custom: {
-                'noteheadCircleXStemUp': {
+                noteheadCircleXStemUp: {
                     shiftX: 1.5,
                 },
-                'noteheadCircleXStemDown': {
+                noteheadCircleXStemDown: {
                     shiftX: 0.25,
                 },
-                'noteheadDiamondHalfStemUp': {
+                noteheadDiamondHalfStemUp: {
                     shiftX: 1.5,
                 },
-                'noteheadDiamondBlackStemUp': {
+                noteheadDiamondBlackStemUp: {
                     shiftX: 1.5,
                 },
-                'noteheadDiamondWholeStemUp': {
+                noteheadDiamondWholeStemUp: {
                     shiftX: 1,
                 },
-                'noteheadXHalfStemUp': {
+                noteheadXHalfStemUp: {
                     shiftX: -2,
                 },
-                'noteheadXHalfStemDown': {
+                noteheadXHalfStemDown: {
                     shiftX: 1,
                 },
-                'noteheadXWholeStemUp': {
+                noteheadXWholeStemUp: {
                     shiftX: -4,
                 },
-                'noteheadXWholeStemDown': {
+                noteheadXWholeStemDown: {
                     shiftX: 1,
                 },
-                'noteheadSquareWhiteStemDown': {
+                noteheadSquareWhiteStemDown: {
                     shiftX: 0.25,
                 },
-                'noteheadSquareWhiteStemUp': {
+                noteheadSquareWhiteStemUp: {
                     shiftX: -0.75,
                 },
-                'noteheadSquareBlackStemUp': {
+                noteheadSquareBlackStemUp: {
                     shiftX: -0.75,
                 },
-                'noteheadTriangleUpWholeStemUp': {
+                noteheadTriangleUpWholeStemUp: {
                     shiftX: -0.75,
-                }
+                },
             },
         },
         chordSymbol: {
@@ -9278,92 +9320,92 @@ exports.BravuraMetrics = {
                 lowerKerningText: ['D', 'F', 'P', 'T', 'V', 'Y'],
                 upperKerningText: ['A', 'L'],
                 spacing: 100,
-                superSubRatio: 0.66
+                superSubRatio: 0.66,
             },
             csymDiminished: {
                 scale: 0.8,
                 leftSideBearing: -32,
                 advanceWidth: 506,
-                yOffset: 0
+                yOffset: 0,
             },
             csymHalfDiminished: {
                 scale: 0.8,
                 leftSideBearing: -32,
                 advanceWidth: 506,
-                yOffset: 0
+                yOffset: 0,
             },
             csymAugmented: {
                 scale: 1,
                 leftSideBearing: 0,
                 advanceWidth: 530,
-                yOffset: 0
+                yOffset: 0,
             },
             csymParensLeftTall: {
                 scale: 0.8,
                 leftSideBearing: -20,
                 advanceWidth: 184,
-                yOffset: 250
+                yOffset: 250,
             },
             csymParensRightTall: {
                 scale: 0.8,
                 leftSideBearing: 0,
                 advanceWidth: 189,
-                yOffset: 250
+                yOffset: 250,
             },
             csymBracketLeftTall: {
                 scale: 0.8,
                 leftSideBearing: 0,
                 advanceWidth: 328,
-                yOffset: 0
+                yOffset: 0,
             },
             csymBracketRightTall: {
                 scale: 0.8,
                 leftSideBearing: 1,
                 advanceWidth: 600,
-                yOffset: 0
+                yOffset: 0,
             },
             csymParensLeftVeryTall: {
                 scale: 0.9,
                 leftSideBearing: 50,
                 advanceWidth: 121,
-                yOffset: 350
+                yOffset: 350,
             },
             csymParensRightVeryTall: {
                 scale: 0.9,
                 leftSideBearing: 0,
                 advanceWidth: 111,
-                yOffset: 350
+                yOffset: 350,
             },
             csymDiagonalArrangementSlash: {
                 scale: 0.6,
                 leftSideBearing: -1,
                 advanceWidth: 990,
-                yOffset: 0
+                yOffset: 0,
             },
             csymMinor: {
                 scale: 0.8,
                 leftSideBearing: 0,
                 advanceWidth: 482,
-                yOffset: 0
+                yOffset: 0,
             },
             csymMajorSeventh: {
                 scale: 0.9,
                 leftSideBearing: 200,
                 yOffset: 0,
-                advanceWidth: 600
+                advanceWidth: 600,
             },
             accidentalSharp: {
                 scale: 0.75,
                 leftSideBearing: 20,
                 advanceWidth: 250,
-                yOffset: -302
+                yOffset: -302,
             },
             accidentalFlat: {
                 scale: 0.9,
                 leftSideBearing: -20,
                 advanceWidth: 226,
-                yOffset: -184
-            }
+                yOffset: -184,
+            },
         },
         jazzOrnaments: {
             brassScoop: {
@@ -9371,80 +9413,80 @@ exports.BravuraMetrics = {
                 xOffset: -12,
                 yOffset: 0,
                 stemUpYOffset: 0,
-                reportedWidth: 10
+                reportedWidth: 10,
             },
             brassDoitMedium: {
                 scale: 1.0,
                 xOffset: 16,
                 yOffset: 0,
                 stemUpYOffset: 0,
-                reportedWidth: 15
+                reportedWidth: 15,
             },
             brassFallLipShort: {
                 scale: 1.0,
                 xOffset: 16,
                 yOffset: 0,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassLiftMedium: {
                 scale: 1.0,
                 xOffset: 16,
                 yOffset: 5,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassFallRoughMedium: {
                 scale: 1.0,
                 xOffset: 16,
                 yOffset: 28,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassBend: {
                 scale: 1.0,
                 xOffset: 2,
                 yOffset: -8,
                 stemUpYOffset: 25,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassMuteClosed: {
                 scale: 1.0,
                 xOffset: 3,
                 yOffset: -8,
                 stemUpYOffset: 25,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassMuteOpen: {
                 scale: 1.0,
                 xOffset: 3,
                 yOffset: -7,
                 stemUpYOffset: 25,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassFlip: {
                 scale: 1.0,
                 xOffset: 10,
                 yOffset: -4,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassJazzTurn: {
                 scale: 1.0,
                 xOffset: 6,
                 yOffset: -4,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassSmear: {
                 scale: 1.0,
                 xOffset: 10,
                 yOffset: -4,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
-        }
-    }
+        },
+    },
 };
 
 
@@ -10492,11 +10534,11 @@ exports.GonvilleMetrics = {
         padding: 12,
     },
     clef: {
-        'default': {
+        default: {
             point: 40,
-            width: 26
+            width: 26,
         },
-        'small': {
+        small: {
             point: 32,
             width: 20,
         },
@@ -10516,7 +10558,7 @@ exports.GonvilleMetrics = {
                         line: -0.4,
                         shiftX: 8,
                     },
-                }
+                },
             },
             '8vb': {
                 smuflCode: 'timeSig8',
@@ -10529,7 +10571,7 @@ exports.GonvilleMetrics = {
                     bass: {
                         line: 4,
                         shiftX: 1,
-                    }
+                    },
                 },
                 small: {
                     point: 18,
@@ -10540,9 +10582,9 @@ exports.GonvilleMetrics = {
                     bass: {
                         line: 3.5,
                         shiftX: 0.5,
-                    }
-                }
-            }
+                    },
+                },
+            },
         },
         // May not need these anymore
         lineCount: {
@@ -10551,15 +10593,15 @@ exports.GonvilleMetrics = {
             '6': { point: 40, shiftY: 1 },
             '5': { point: 30, shiftY: -6 },
             '4': { point: 23, shiftY: -12 },
-        }
+        },
     },
     pedalMarking: {
         up: {
-            point: 40
+            point: 40,
         },
         down: {
-            point: 40
-        }
+            point: 40,
+        },
     },
     tremolo: {
         default: {
@@ -10577,7 +10619,7 @@ exports.GonvilleMetrics = {
             offsetYStemDown: -21,
             offsetXStemUp: 6,
             offsetXStemDown: -2,
-        }
+        },
     },
     // These are for numeric digits, such as in time signatures
     digits: {
@@ -10585,6 +10627,7 @@ exports.GonvilleMetrics = {
         tupletPoint: 28,
     },
     stem: {
+        heightAdjustmentForFlag: -3,
         // These are stem (Y) offsets to the note heads. To shift the
         // noteheads (x-position) themselves, see glyphs.notehead.custom.
         noteHead: {
@@ -10623,8 +10666,8 @@ exports.GonvilleMetrics = {
             noteheadSquareWhite: {
                 offsetYBaseStemDown: -5,
                 offsetYBaseStemUp: 5,
-            }
-        }
+            },
+        },
     },
     glyphs: {
         flag: {
@@ -10651,20 +10694,20 @@ exports.GonvilleMetrics = {
             ornamentTrill: {
                 shiftX: -5,
                 shiftY: 4,
-            }
+            },
         },
         noteHead: {
             custom: {
-                'noteheadDiamondWholeStemUp': {
+                noteheadDiamondWholeStemUp: {
                     shiftX: -6,
                 },
-                'noteheadCircleXStemUp': {
+                noteheadCircleXStemUp: {
                     shiftX: -1.5,
                 },
-                'noteheadXWholeStemUp': {
+                noteheadXWholeStemUp: {
                     shiftX: -5,
                 },
-                'noteheadTriangleUpWholeStemUp': {
+                noteheadTriangleUpWholeStemUp: {
                     shiftX: -6,
                 },
             },
@@ -10677,92 +10720,92 @@ exports.GonvilleMetrics = {
                 lowerKerningText: ['D', 'F', 'P', 'T', 'V', 'Y'],
                 upperKerningText: ['A', 'L'],
                 spacing: 100,
-                superSubRatio: 0.66
+                superSubRatio: 0.66,
             },
             csymDiminished: {
                 scale: 0.8,
                 leftSideBearing: 0,
                 advanceWidth: 506,
-                yOffset: 0
+                yOffset: 0,
             },
             csymHalfDiminished: {
                 scale: 0.8,
                 leftSideBearing: -32,
                 advanceWidth: 506,
-                yOffset: 0
+                yOffset: 0,
             },
             csymAugmented: {
                 scale: 1,
                 leftSideBearing: 0,
                 advanceWidth: 530,
-                yOffset: 0
+                yOffset: 0,
             },
             csymParensLeftTall: {
                 scale: 0.8,
                 leftSideBearing: 0,
                 advanceWidth: 155,
-                yOffset: 250
+                yOffset: 250,
             },
             csymParensRightTall: {
                 scale: 0.8,
                 leftSideBearing: -40,
                 advanceWidth: 189,
-                yOffset: 250
+                yOffset: 250,
             },
             csymBracketLeftTall: {
                 scale: 0.8,
                 leftSideBearing: 0,
                 advanceWidth: 328,
-                yOffset: 0
+                yOffset: 0,
             },
             csymBracketRightTall: {
                 scale: 0.8,
                 leftSideBearing: 1,
                 advanceWidth: 600,
-                yOffset: 0
+                yOffset: 0,
             },
             csymParensLeftVeryTall: {
                 scale: 0.9,
                 leftSideBearing: 0,
                 advanceWidth: 121,
-                yOffset: 350
+                yOffset: 350,
             },
             csymParensRightVeryTall: {
                 scale: 0.9,
                 leftSideBearing: 50,
                 advanceWidth: 111,
-                yOffset: 350
+                yOffset: 350,
             },
             csymDiagonalArrangementSlash: {
                 scale: 0.6,
                 leftSideBearing: -1,
                 advanceWidth: 990,
-                yOffset: 0
+                yOffset: 0,
             },
             csymMinor: {
                 scale: 0.8,
                 leftSideBearing: 0,
                 advanceWidth: 482,
-                yOffset: 0
+                yOffset: 0,
             },
             csymMajorSeventh: {
                 scale: 0.9,
                 leftSideBearing: 200,
                 yOffset: 0,
-                advanceWidth: 600
+                advanceWidth: 600,
             },
             accidentalSharp: {
                 scale: 0.75,
                 leftSideBearing: 40,
                 advanceWidth: 250,
-                yOffset: -402
+                yOffset: -402,
             },
             accidentalFlat: {
                 scale: 0.95,
                 leftSideBearing: -50,
                 advanceWidth: 208,
-                yOffset: -184
-            }
+                yOffset: -184,
+            },
         },
         jazzOrnaments: {
             brassScoop: {
@@ -10770,80 +10813,80 @@ exports.GonvilleMetrics = {
                 xOffset: -12,
                 yOffset: 0,
                 stemUpYOffset: 0,
-                reportedWidth: 10
+                reportedWidth: 10,
             },
             brassDoitMedium: {
                 scale: 1.0,
                 xOffset: 16,
                 yOffset: 0,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassFallLipShort: {
                 scale: 1.0,
                 xOffset: 17,
                 yOffset: 0,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassLiftMedium: {
                 scale: 1.0,
                 xOffset: 16,
                 yOffset: 5,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassFallRoughMedium: {
                 scale: 1.0,
                 xOffset: 16,
                 yOffset: 28,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassBend: {
                 scale: 1.0,
                 xOffset: 2,
                 yOffset: -8,
                 stemUpYOffset: 24,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassMuteClosed: {
                 scale: 1.0,
                 xOffset: 3,
                 yOffset: -9,
                 stemUpYOffset: 24,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassMuteOpen: {
                 scale: 1.0,
                 xOffset: 3,
                 yOffset: -7,
                 stemUpYOffset: 25,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassFlip: {
                 scale: 1.0,
                 xOffset: 10,
                 yOffset: -4,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassJazzTurn: {
                 scale: 1.0,
                 xOffset: 6,
                 yOffset: -4,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassSmear: {
                 scale: 1.0,
                 xOffset: 10,
                 yOffset: -4,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
-        }
-    }
+        },
+    },
 };
 
 
@@ -14087,7 +14130,7 @@ exports.PetalumaMetrics = {
                         line: -0.2,
                         shiftX: 8,
                     },
-                }
+                },
             },
             '8vb': {
                 smuflCode: 'timeSig8',
@@ -14100,7 +14143,7 @@ exports.PetalumaMetrics = {
                     bass: {
                         line: 3.5,
                         shiftX: 1,
-                    }
+                    },
                 },
                 small: {
                     point: 16,
@@ -14111,9 +14154,9 @@ exports.PetalumaMetrics = {
                     bass: {
                         line: 3.1,
                         shiftX: 0.5,
-                    }
-                }
-            }
+                    },
+                },
+            },
         },
         // These may no longer be necessary
         lineCount: {
@@ -14122,15 +14165,15 @@ exports.PetalumaMetrics = {
             '6': { point: 32, shiftY: 1 },
             '5': { point: 30, shiftY: -6 },
             '4': { point: 23, shiftY: -12 },
-        }
+        },
     },
     pedalMarking: {
         up: {
-            point: 40
+            point: 40,
         },
         down: {
-            point: 34
-        }
+            point: 34,
+        },
     },
     // These are for numeric digits, such as in time signatures
     digits: {
@@ -14147,7 +14190,7 @@ exports.PetalumaMetrics = {
         },
         articStaccatissimoBelow: {
             padding: 2,
-        }
+        },
     },
     tremolo: {
         default: {
@@ -14165,7 +14208,7 @@ exports.PetalumaMetrics = {
             offsetYStemDown: 5,
             offsetXStemUp: 7,
             offsetXStemDown: 1,
-        }
+        },
     },
     noteHead: {
         displaced: {
@@ -14173,6 +14216,7 @@ exports.PetalumaMetrics = {
         },
     },
     stem: {
+        heightAdjustmentForFlag: -3,
         // These are stem (Y) offsets to the note heads. To shift the
         // noteheads (x-position) themselves, see glyphs.notehead.custom.
         noteHead: {
@@ -14211,8 +14255,8 @@ exports.PetalumaMetrics = {
             noteheadSquareWhite: {
                 offsetYBaseStemDown: -5,
                 offsetYBaseStemUp: 5,
-            }
-        }
+            },
+        },
     },
     // Values under here are used by the Glyph class to reposition and rescale
     // glyphs based on their category. This should be the first stop for
@@ -14263,16 +14307,16 @@ exports.PetalumaMetrics = {
             },
             staveTempo: {
                 shiftX: -1,
-            }
+            },
         },
         clef: {
             gClef: {
                 default: { scale: 1.1, shiftY: 1 },
-                small: { shiftY: 1.5 }
+                small: { shiftY: 1.5 },
             },
             fClef: {
-                default: { shiftY: -0.5 }
-            }
+                default: { shiftY: -0.5 },
+            },
         },
         ornament: {
             ornamentTurn: {
@@ -14290,7 +14334,7 @@ exports.PetalumaMetrics = {
                 wiggly: {
                     shiftX: -1,
                     shiftY: 1,
-                }
+                },
             },
             arrowheadBlackUp: {
                 straight: {
@@ -14299,8 +14343,8 @@ exports.PetalumaMetrics = {
                 wiggly: {
                     shiftX: -1,
                     shiftY: 1,
-                }
-            }
+                },
+            },
         },
         textNote: {
             point: 34,
@@ -14330,7 +14374,7 @@ exports.PetalumaMetrics = {
             },
             ornamentShortTrill: {
                 shiftX: -8,
-            }
+            },
         },
         noteHead: {
             standard: {
@@ -14363,48 +14407,48 @@ exports.PetalumaMetrics = {
                 },
             },
             custom: {
-                'noteheadCircleXStemUp': {
+                noteheadCircleXStemUp: {
                     shiftX: -1,
                 },
-                'noteheadCircleXStemDown': {
+                noteheadCircleXStemDown: {
                     shiftX: 0.25,
                 },
-                'noteheadDiamondHalfStemUp': {
+                noteheadDiamondHalfStemUp: {
                     shiftX: 1.5,
                 },
-                'noteheadDiamondBlackStemUp': {
+                noteheadDiamondBlackStemUp: {
                     shiftX: 1.5,
                 },
-                'noteheadDiamondWholeStemUp': {
+                noteheadDiamondWholeStemUp: {
                     shiftX: 1,
                 },
-                'noteheadXBlackStemUp': {
+                noteheadXBlackStemUp: {
                     shiftX: 1,
                 },
-                'noteheadXHalfStemUp': {
+                noteheadXHalfStemUp: {
                     shiftX: -3,
                 },
-                'noteheadXHalfStemDown': {
+                noteheadXHalfStemDown: {
                     shiftX: 1,
                 },
-                'noteheadXWholeStemUp': {
+                noteheadXWholeStemUp: {
                     shiftX: -7,
                 },
-                'noteheadXWholeStemDown': {
+                noteheadXWholeStemDown: {
                     shiftX: 1,
                 },
-                'noteheadSquareWhiteStemDown': {
+                noteheadSquareWhiteStemDown: {
                     shiftX: 0.25,
                 },
-                'noteheadSquareWhiteStemUp': {
+                noteheadSquareWhiteStemUp: {
                     shiftX: -0.75,
                 },
-                'noteheadSquareBlackStemUp': {
+                noteheadSquareBlackStemUp: {
                     shiftX: -0.75,
                 },
-                'noteheadTriangleUpWholeStemUp': {
+                noteheadTriangleUpWholeStemUp: {
                     shiftX: -0.75,
-                }
+                },
             },
         },
         chordSymbol: {
@@ -14415,92 +14459,92 @@ exports.PetalumaMetrics = {
                 lowerKerningText: ['D', 'F', 'P', 'T', 'V', 'Y'],
                 upperKerningText: ['L'],
                 spacing: 20,
-                superSubRatio: 0.73
+                superSubRatio: 0.73,
             },
             csymDiminished: {
                 scale: 0.8,
                 leftSideBearing: -95,
                 advanceWidth: 506,
-                yOffset: 0
+                yOffset: 0,
             },
             csymHalfDiminished: {
                 scale: 0.8,
                 leftSideBearing: -32,
                 advanceWidth: 506,
-                yOffset: 0
+                yOffset: 0,
             },
             csymAugmented: {
                 scale: 1,
                 leftSideBearing: -25,
                 advanceWidth: 530,
-                yOffset: 0
+                yOffset: 0,
             },
             csymParensLeftTall: {
                 scale: 0.8,
                 leftSideBearing: 0,
                 advanceWidth: 155,
-                yOffset: 150
+                yOffset: 150,
             },
             csymParensRightTall: {
                 scale: 0.8,
                 leftSideBearing: 40,
                 advanceWidth: 189,
-                yOffset: 150
+                yOffset: 150,
             },
             csymBracketLeftTall: {
                 scale: 0.8,
                 leftSideBearing: 0,
                 advanceWidth: 328,
-                yOffset: 0
+                yOffset: 0,
             },
             csymBracketRightTall: {
                 scale: 0.8,
                 leftSideBearing: 1,
                 advanceWidth: 600,
-                yOffset: 0
+                yOffset: 0,
             },
             csymParensLeftVeryTall: {
                 scale: 0.95,
                 leftSideBearing: 0,
                 advanceWidth: 210,
-                yOffset: 250
+                yOffset: 250,
             },
             csymParensRightVeryTall: {
                 scale: 0.9,
                 leftSideBearing: -100,
                 advanceWidth: 111,
-                yOffset: 250
+                yOffset: 250,
             },
             csymDiagonalArrangementSlash: {
                 scale: 0.6,
                 leftSideBearing: -1,
                 advanceWidth: 990,
-                yOffset: 0
+                yOffset: 0,
             },
             csymMinor: {
                 scale: 0.7,
                 leftSideBearing: 0,
                 advanceWidth: 482,
-                yOffset: 0
+                yOffset: 0,
             },
             csymMajorSeventh: {
                 scale: 0.8,
                 leftSideBearing: 100,
                 yOffset: 0,
-                advanceWidth: 600
+                advanceWidth: 600,
             },
             accidentalSharp: {
                 scale: 0.7,
                 leftSideBearing: 0,
                 advanceWidth: 425,
-                yOffset: -422
+                yOffset: -422,
             },
             accidentalFlat: {
                 scale: 0.8,
                 leftSideBearing: -10,
                 advanceWidth: 228,
-                yOffset: -284
-            }
+                yOffset: -284,
+            },
         },
         jazzOrnaments: {
             brassScoop: {
@@ -14508,80 +14552,80 @@ exports.PetalumaMetrics = {
                 xOffset: -12,
                 yOffset: 0,
                 stemUpYOffset: 0,
-                reportedWidth: 10
+                reportedWidth: 10,
             },
             brassDoitMedium: {
                 scale: 1.0,
                 xOffset: 16,
                 yOffset: 0,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassFallLipShort: {
                 scale: 1.0,
                 xOffset: 16,
                 yOffset: 0,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassLiftMedium: {
                 scale: 1.0,
                 xOffset: 16,
                 yOffset: 5,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassFallRoughMedium: {
                 scale: 1.0,
                 xOffset: 16,
                 yOffset: 26,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassBend: {
                 scale: 1.0,
                 xOffset: 3,
                 yOffset: -8,
                 stemUpYOffset: 28,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassMuteClosed: {
                 scale: 1.0,
                 xOffset: 3,
                 yOffset: -8,
                 stemUpYOffset: 26,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassMuteOpen: {
                 scale: 1.0,
                 xOffset: 4,
                 yOffset: -8,
                 stemUpYOffset: 27,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassFlip: {
                 scale: 1.0,
                 xOffset: 10,
                 yOffset: -4,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassJazzTurn: {
                 scale: 1.0,
                 xOffset: 6,
                 yOffset: -4,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
             brassSmear: {
                 scale: 1.0,
                 xOffset: 10,
                 yOffset: -4,
                 stemUpYOffset: 0,
-                reportedWidth: 5
+                reportedWidth: 5,
             },
-        }
-    }
+        },
+    },
 };
 
 
@@ -16390,7 +16434,7 @@ var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var beam_1 = __webpack_require__(/*! ./beam */ "./src/beam.ts");
 var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
 var fraction_1 = __webpack_require__(/*! ./fraction */ "./src/fraction.ts");
-var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.js");
+var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.ts");
 var staveconnector_1 = __webpack_require__(/*! ./staveconnector */ "./src/staveconnector.js");
 var stavenote_1 = __webpack_require__(/*! ./stavenote */ "./src/stavenote.ts");
 var modifiercontext_1 = __webpack_require__(/*! ./modifiercontext */ "./src/modifiercontext.js");
@@ -17347,9 +17391,9 @@ exports.Fraction = Fraction;
 
 /***/ }),
 
-/***/ "./src/frethandfinger.js":
+/***/ "./src/frethandfinger.ts":
 /*!*******************************!*\
-  !*** ./src/frethandfinger.js ***!
+  !*** ./src/frethandfinger.ts ***!
   \*******************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -17384,12 +17428,10 @@ var modifier_1 = __webpack_require__(/*! ./modifier */ "./src/modifier.ts");
  */
 var FretHandFinger = /** @class */ (function (_super) {
     __extends(FretHandFinger, _super);
-    function FretHandFinger(number) {
+    function FretHandFinger(finger) {
         var _this = _super.call(this) || this;
         _this.setAttribute('type', 'FretHandFinger');
-        _this.note = null;
-        _this.index = null;
-        _this.finger = number;
+        _this.finger = finger;
         _this.width = 7;
         _this.position = modifier_1.Modifier.Position.LEFT; // Default position above stem or note head
         _this.x_shift = 0;
@@ -17480,17 +17522,16 @@ var FretHandFinger = /** @class */ (function (_super) {
         return true;
     };
     FretHandFinger.easyScoreHook = function (_a, note, builder) {
-        var fingerings = _a.fingerings;
+        var _b = _a === void 0 ? {} : _a, fingerings = _b.fingerings;
         if (!fingerings)
             return;
         fingerings
             .split(',')
-            .map(function (fingeringString) { return fingeringString.trim().split('.'); })
-            .map(function (_a) {
-            var number = _a[0], position = _a[1];
-            var params = { number: number };
-            if (position)
-                params.position = position;
+            .map(function (fingeringString) {
+            var split = fingeringString.trim().split('.');
+            var params = { number: split[0] };
+            if (split[1])
+                params.position = split[1];
             return builder.getFactory().Fingering(params);
         })
             .map(function (fingering, index) { return note.addModifier(fingering, index); });
@@ -17498,8 +17539,8 @@ var FretHandFinger = /** @class */ (function (_super) {
     FretHandFinger.prototype.getCategory = function () {
         return FretHandFinger.CATEGORY;
     };
-    FretHandFinger.prototype.setFretHandFinger = function (number) {
-        this.finger = number;
+    FretHandFinger.prototype.setFretHandFinger = function (finger) {
+        this.finger = finger;
         return this;
     };
     FretHandFinger.prototype.setOffsetX = function (x) {
@@ -17516,7 +17557,7 @@ var FretHandFinger = /** @class */ (function (_super) {
             throw new vex_1.Vex.RERR('NoAttachedNote', "Can't draw string number without a note and index.");
         }
         this.setRendered();
-        var ctx = this.context;
+        var ctx = this.checkContext();
         var start = this.note.getModifierStartXY(this.position, this.index);
         var dot_x = start.x + this.x_shift + this.x_offset;
         var dot_y = start.y + this.y_shift + this.y_offset + 5;
@@ -17550,9 +17591,9 @@ exports.FretHandFinger = FretHandFinger;
 
 /***/ }),
 
-/***/ "./src/ghostnote.js":
+/***/ "./src/ghostnote.ts":
 /*!**************************!*\
-  !*** ./src/ghostnote.js ***!
+  !*** ./src/ghostnote.ts ***!
   \**************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -17588,7 +17629,7 @@ var GhostNote = /** @class */ (function (_super) {
         var _this = this;
         // Sanity check
         if (!parameter) {
-            throw new vex_1.Vex.RuntimeError('BadArguments', 'Ghost note must have valid initialization data to identify ' + 'duration.');
+            throw new vex_1.Vex.RERR('BadArguments', 'Ghost note must have valid initialization data to identify duration.');
         }
         var note_struct;
         // Preserve backwards-compatibility
@@ -17612,6 +17653,7 @@ var GhostNote = /** @class */ (function (_super) {
     };
     GhostNote.prototype.setStave = function (stave) {
         _super.prototype.setStave.call(this, stave);
+        return this;
     };
     GhostNote.prototype.addToModifierContext = function () {
         /* intentionally overridden */ return this;
@@ -17627,7 +17669,7 @@ var GhostNote = /** @class */ (function (_super) {
         this.setRendered();
         for (var i = 0; i < this.modifiers.length; ++i) {
             var modifier = this.modifiers[i];
-            modifier.setContext(this.context);
+            modifier.setContext(this.getContext());
             modifier.drawWithStyle();
         }
     };
@@ -17679,8 +17721,8 @@ exports.Glyph = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
 var element_1 = __webpack_require__(/*! ./element */ "./src/element.ts");
-var boundingboxcomputation_1 = __webpack_require__(/*! ./boundingboxcomputation */ "./src/boundingboxcomputation.js");
-var boundingbox_1 = __webpack_require__(/*! ./boundingbox */ "./src/boundingbox.js");
+var boundingboxcomputation_1 = __webpack_require__(/*! ./boundingboxcomputation */ "./src/boundingboxcomputation.ts");
+var boundingbox_1 = __webpack_require__(/*! ./boundingbox */ "./src/boundingbox.ts");
 function processOutline(outline, originX, originY, scaleX, scaleY, 
 // eslint-disable-next-line
 outlineFns) {
@@ -17882,7 +17924,7 @@ var Glyph = /** @class */ (function (_super) {
             b: bboxComp.addBezierCurve.bind(bboxComp),
             z: bboxComp.noOp.bind(bboxComp),
         });
-        return new boundingbox_1.BoundingBox(bboxComp.x1, bboxComp.y1, bboxComp.width(), bboxComp.height());
+        return new boundingbox_1.BoundingBox(bboxComp.getX1(), bboxComp.getY1(), bboxComp.width(), bboxComp.height());
     };
     Glyph.prototype.getCode = function () {
         return this.code;
@@ -18313,7 +18355,7 @@ var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
 var modifier_1 = __webpack_require__(/*! ./modifier */ "./src/modifier.ts");
 var formatter_1 = __webpack_require__(/*! ./formatter */ "./src/formatter.js");
-var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.js");
+var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.ts");
 var beam_1 = __webpack_require__(/*! ./beam */ "./src/beam.ts");
 var stavetie_1 = __webpack_require__(/*! ./stavetie */ "./src/stavetie.js");
 var tabtie_1 = __webpack_require__(/*! ./tabtie */ "./src/tabtie.js");
@@ -18591,17 +18633,17 @@ var music_1 = __webpack_require__(/*! ./music */ "./src/music.ts");
 var glyph_1 = __webpack_require__(/*! ./glyph */ "./src/glyph.ts");
 var stave_1 = __webpack_require__(/*! ./stave */ "./src/stave.ts");
 var stavenote_1 = __webpack_require__(/*! ./stavenote */ "./src/stavenote.ts");
-var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.js");
-var stavetempo_1 = __webpack_require__(/*! ./stavetempo */ "./src/stavetempo.js");
-var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.js");
+var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.ts");
+var stavetempo_1 = __webpack_require__(/*! ./stavetempo */ "./src/stavetempo.ts");
+var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.ts");
 var accidental_1 = __webpack_require__(/*! ./accidental */ "./src/accidental.js");
 var beam_1 = __webpack_require__(/*! ./beam */ "./src/beam.ts");
 var stavetie_1 = __webpack_require__(/*! ./stavetie */ "./src/stavetie.js");
 var tabstave_1 = __webpack_require__(/*! ./tabstave */ "./src/tabstave.ts");
 var tabnote_1 = __webpack_require__(/*! ./tabnote */ "./src/tabnote.js");
-var bend_1 = __webpack_require__(/*! ./bend */ "./src/bend.js");
+var bend_1 = __webpack_require__(/*! ./bend */ "./src/bend.ts");
 var vibrato_1 = __webpack_require__(/*! ./vibrato */ "./src/vibrato.ts");
-var vibratobracket_1 = __webpack_require__(/*! ./vibratobracket */ "./src/vibratobracket.js");
+var vibratobracket_1 = __webpack_require__(/*! ./vibratobracket */ "./src/vibratobracket.ts");
 var note_1 = __webpack_require__(/*! ./note */ "./src/note.ts");
 var modifiercontext_1 = __webpack_require__(/*! ./modifiercontext */ "./src/modifiercontext.js");
 var multimeasurerest_1 = __webpack_require__(/*! ./multimeasurerest */ "./src/multimeasurerest.js");
@@ -18612,14 +18654,14 @@ var chordsymbol_1 = __webpack_require__(/*! ./chordsymbol */ "./src/chordsymbol.
 var stavebarline_1 = __webpack_require__(/*! ./stavebarline */ "./src/stavebarline.js");
 var notehead_1 = __webpack_require__(/*! ./notehead */ "./src/notehead.js");
 var staveconnector_1 = __webpack_require__(/*! ./staveconnector */ "./src/staveconnector.js");
-var clefnote_1 = __webpack_require__(/*! ./clefnote */ "./src/clefnote.js");
+var clefnote_1 = __webpack_require__(/*! ./clefnote */ "./src/clefnote.ts");
 var keysignature_1 = __webpack_require__(/*! ./keysignature */ "./src/keysignature.js");
 var keysignote_1 = __webpack_require__(/*! ./keysignote */ "./src/keysignote.ts");
 var timesignature_1 = __webpack_require__(/*! ./timesignature */ "./src/timesignature.js");
 var timesignote_1 = __webpack_require__(/*! ./timesignote */ "./src/timesignote.js");
 var stem_1 = __webpack_require__(/*! ./stem */ "./src/stem.ts");
 var tabtie_1 = __webpack_require__(/*! ./tabtie */ "./src/tabtie.js");
-var clef_1 = __webpack_require__(/*! ./clef */ "./src/clef.js");
+var clef_1 = __webpack_require__(/*! ./clef */ "./src/clef.ts");
 var dot_1 = __webpack_require__(/*! ./dot */ "./src/dot.js");
 var modifier_1 = __webpack_require__(/*! ./modifier */ "./src/modifier.ts");
 var tabslide_1 = __webpack_require__(/*! ./tabslide */ "./src/tabslide.js");
@@ -18629,7 +18671,7 @@ var gracetabnote_1 = __webpack_require__(/*! ./gracetabnote */ "./src/gracetabno
 var tuning_1 = __webpack_require__(/*! ./tuning */ "./src/tuning.ts");
 var keymanager_1 = __webpack_require__(/*! ./keymanager */ "./src/keymanager.js");
 var stavehairpin_1 = __webpack_require__(/*! ./stavehairpin */ "./src/stavehairpin.js");
-var boundingbox_1 = __webpack_require__(/*! ./boundingbox */ "./src/boundingbox.js");
+var boundingbox_1 = __webpack_require__(/*! ./boundingbox */ "./src/boundingbox.ts");
 var strokes_1 = __webpack_require__(/*! ./strokes */ "./src/strokes.js");
 var textnote_1 = __webpack_require__(/*! ./textnote */ "./src/textnote.js");
 var curve_1 = __webpack_require__(/*! ./curve */ "./src/curve.ts");
@@ -18638,19 +18680,19 @@ var staveline_1 = __webpack_require__(/*! ./staveline */ "./src/staveline.js");
 var ornament_1 = __webpack_require__(/*! ./ornament */ "./src/ornament.js");
 var pedalmarking_1 = __webpack_require__(/*! ./pedalmarking */ "./src/pedalmarking.js");
 var textbracket_1 = __webpack_require__(/*! ./textbracket */ "./src/textbracket.js");
-var frethandfinger_1 = __webpack_require__(/*! ./frethandfinger */ "./src/frethandfinger.js");
+var frethandfinger_1 = __webpack_require__(/*! ./frethandfinger */ "./src/frethandfinger.ts");
 var staverepetition_1 = __webpack_require__(/*! ./staverepetition */ "./src/staverepetition.js");
 var barnote_1 = __webpack_require__(/*! ./barnote */ "./src/barnote.js");
-var ghostnote_1 = __webpack_require__(/*! ./ghostnote */ "./src/ghostnote.js");
+var ghostnote_1 = __webpack_require__(/*! ./ghostnote */ "./src/ghostnote.ts");
 var notesubgroup_1 = __webpack_require__(/*! ./notesubgroup */ "./src/notesubgroup.js");
 var gracenotegroup_1 = __webpack_require__(/*! ./gracenotegroup */ "./src/gracenotegroup.ts");
 var tremolo_1 = __webpack_require__(/*! ./tremolo */ "./src/tremolo.ts");
 var stringnumber_1 = __webpack_require__(/*! ./stringnumber */ "./src/stringnumber.js");
 var crescendo_1 = __webpack_require__(/*! ./crescendo */ "./src/crescendo.js");
-var stavevolta_1 = __webpack_require__(/*! ./stavevolta */ "./src/stavevolta.js");
+var stavevolta_1 = __webpack_require__(/*! ./stavevolta */ "./src/stavevolta.ts");
 var system_1 = __webpack_require__(/*! ./system */ "./src/system.js");
 var factory_1 = __webpack_require__(/*! ./factory */ "./src/factory.js");
-var parser_1 = __webpack_require__(/*! ./parser */ "./src/parser.js");
+var parser_1 = __webpack_require__(/*! ./parser */ "./src/parser.ts");
 var easyscore_1 = __webpack_require__(/*! ./easyscore */ "./src/easyscore.js");
 var registry_1 = __webpack_require__(/*! ./registry */ "./src/registry.js");
 var stavetext_1 = __webpack_require__(/*! ./stavetext */ "./src/stavetext.js");
@@ -18906,7 +18948,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.KeySignature = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
-var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.js");
+var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.ts");
 var glyph_1 = __webpack_require__(/*! ./glyph */ "./src/glyph.ts");
 var KeySignature = /** @class */ (function (_super) {
     __extends(KeySignature, _super);
@@ -19252,6 +19294,9 @@ var KeySigNote = /** @class */ (function (_super) {
         return this;
     };
     KeySigNote.prototype.preFormat = function () {
+        if (!this.stave) {
+            throw new vex_1.Vex.RERR('NoStave', 'No stave attached to this note.');
+        }
         this.setPreFormatted(true);
         this.keySignature.setStave(this.stave);
         this.keySignature.format();
@@ -19264,7 +19309,7 @@ var KeySigNote = /** @class */ (function (_super) {
         }
         var ctx = this.stave.checkContext();
         this.setRendered();
-        this.keySignature.x = this.getAbsoluteX();
+        this.keySignature.setX(this.getAbsoluteX());
         this.keySignature.setContext(ctx);
         this.keySignature.draw();
     };
@@ -19503,7 +19548,7 @@ exports.ModifierContext = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var stavenote_1 = __webpack_require__(/*! ./stavenote */ "./src/stavenote.ts");
 var dot_1 = __webpack_require__(/*! ./dot */ "./src/dot.js");
-var frethandfinger_1 = __webpack_require__(/*! ./frethandfinger */ "./src/frethandfinger.js");
+var frethandfinger_1 = __webpack_require__(/*! ./frethandfinger */ "./src/frethandfinger.ts");
 var accidental_1 = __webpack_require__(/*! ./accidental */ "./src/accidental.js");
 var notesubgroup_1 = __webpack_require__(/*! ./notesubgroup */ "./src/notesubgroup.js");
 var gracenotegroup_1 = __webpack_require__(/*! ./gracenotegroup */ "./src/gracenotegroup.ts");
@@ -19513,7 +19558,7 @@ var articulation_1 = __webpack_require__(/*! ./articulation */ "./src/articulati
 var ornament_1 = __webpack_require__(/*! ./ornament */ "./src/ornament.js");
 var annotation_1 = __webpack_require__(/*! ./annotation */ "./src/annotation.js");
 var chordsymbol_1 = __webpack_require__(/*! ./chordsymbol */ "./src/chordsymbol.js");
-var bend_1 = __webpack_require__(/*! ./bend */ "./src/bend.js");
+var bend_1 = __webpack_require__(/*! ./bend */ "./src/bend.ts");
 var vibrato_1 = __webpack_require__(/*! ./vibrato */ "./src/vibrato.ts");
 // To enable logging for this class. Set `Vex.Flow.ModifierContext.DEBUG` to `true`.
 function L() {
@@ -19656,7 +19701,7 @@ var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
 var element_1 = __webpack_require__(/*! ./element */ "./src/element.ts");
 var glyph_1 = __webpack_require__(/*! ./glyph */ "./src/glyph.ts");
 var notehead_1 = __webpack_require__(/*! ./notehead */ "./src/notehead.js");
-var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.js");
+var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.ts");
 var timesignature_1 = __webpack_require__(/*! ./timesignature */ "./src/timesignature.js");
 var semibrave_rest;
 function get_semibrave_rest() {
@@ -21055,7 +21100,7 @@ var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
 var modifier_1 = __webpack_require__(/*! ./modifier */ "./src/modifier.ts");
 var formatter_1 = __webpack_require__(/*! ./formatter */ "./src/formatter.js");
-var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.js");
+var voice_1 = __webpack_require__(/*! ./voice */ "./src/voice.ts");
 var NoteSubGroup = /** @class */ (function (_super) {
     __extends(NoteSubGroup, _super);
     function NoteSubGroup(subNotes) {
@@ -21472,9 +21517,9 @@ exports.Ornament = Ornament;
 
 /***/ }),
 
-/***/ "./src/parser.js":
+/***/ "./src/parser.ts":
 /*!***********************!*\
-  !*** ./src/parser.js ***!
+  !*** ./src/parser.ts ***!
   \***********************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -21488,6 +21533,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Parser = exports.X = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 // To enable logging for this class. Set `Vex.Flow.Parser.DEBUG` to `true`.
+// eslint-disable-next-line
 function L() {
     var args = [];
     for (var _i = 0; _i < arguments.length; _i++) {
@@ -21497,46 +21543,54 @@ function L() {
         vex_1.Vex.L('Vex.Flow.Parser', args);
 }
 exports.X = vex_1.Vex.MakeException('ParserError');
+var NO_ERROR_POS = -1;
 // Converts parser results into an easy to reference list that can be
-// used in triggers.
-function flattenMatches(results) {
-    if (results.matchedString !== undefined)
-        return results.matchedString;
-    if (results.results)
-        return flattenMatches(results.results);
+// used in triggers. This function returns:
+// - nested array in which the leaf elements are string or null
+// - string (including empty strings)
+// - null
+function flattenMatches(r) {
+    if ('matchedString' in r)
+        return r.matchedString; // string
+    if ('results' in r)
+        return flattenMatches(r.results);
+    var results = r;
     if (results.length === 1)
         return flattenMatches(results[0]);
     if (results.length === 0)
         return null;
-    return results.map(flattenMatches);
+    return results.map(flattenMatches); // nested array
 }
 // This is the base parser class. Given an arbitrary context-free grammar, it
 // can parse any line and execute code when specific rules are met (e.g.,
 // when a string is terminated.)
 var Parser = /** @class */ (function () {
     // For an example of a simple grammar, take a look at tests/parser_tests.js or
-    // the EasyScore grammar in easyscore.js.
+    // the EasyScore grammar in easyscore.ts.
     function Parser(grammar) {
         this.grammar = grammar;
+        this.line = '';
+        this.pos = 0;
+        this.errorPos = NO_ERROR_POS;
     }
-    // Parse `line` using current grammar. Returns {success: true} if the
+    // Parse `line` using current grammar. Returns `{success: true}` if the
     // line parsed correctly, otherwise returns `{success: false, errorPos: N}`
     // where `errorPos` is the location of the error in the string.
     Parser.prototype.parse = function (line) {
         this.line = line;
         this.pos = 0;
-        this.errorPos = -1;
-        var results = this.expect(this.grammar.begin());
-        results.errorPos = this.errorPos;
-        return results;
+        this.errorPos = NO_ERROR_POS;
+        var result = this.expect(this.grammar.begin());
+        result.errorPos = this.errorPos;
+        return result;
     };
     Parser.prototype.matchFail = function (returnPos) {
-        if (this.errorPos === -1)
+        if (this.errorPos === NO_ERROR_POS)
             this.errorPos = this.pos;
         this.pos = returnPos;
     };
     Parser.prototype.matchSuccess = function () {
-        this.errorPos = -1;
+        this.errorPos = NO_ERROR_POS;
     };
     // Look for `token` in this.line[this.pos], and return success
     // if one is found. `token` is specified as a regular expression.
@@ -21563,6 +21617,7 @@ var Parser = /** @class */ (function () {
     // Execute rule to match a sequence of tokens (or rules). If `maybe` is
     // set, then return success even if the token is not found, but reset
     // the position before exiting.
+    // TODO: expectOne(...) is never called with the `maybe` parameter.
     Parser.prototype.expectOne = function (rule, maybe) {
         if (maybe === void 0) { maybe = false; }
         var results = [];
@@ -21571,35 +21626,40 @@ var Parser = /** @class */ (function () {
         var oneMatch = false;
         maybe = maybe === true || rule.maybe === true;
         // Execute all sub rules in sequence.
-        for (var i = 0; i < rule.expect.length; i++) {
-            var next = rule.expect[i];
-            var localPos = this.pos;
-            var result = this.expect(next);
-            // If `rule.or` is set, then return success if any one
-            // of the subrules match, else all subrules must match.
-            if (result.success) {
-                results.push(result);
-                oneMatch = true;
-                if (rule.or)
-                    break;
-            }
-            else {
-                allMatches = false;
-                if (!rule.or) {
-                    this.pos = localPos;
-                    break;
+        if (rule.expect) {
+            for (var _i = 0, _a = rule.expect; _i < _a.length; _i++) {
+                var next = _a[_i];
+                var localPos = this.pos;
+                var result = this.expect(next);
+                // If `rule.or` is set, then return success if any one
+                // of the subrules match, else all subrules must match.
+                if (result.success) {
+                    results.push(result);
+                    oneMatch = true;
+                    if (rule.or)
+                        break;
+                }
+                else {
+                    allMatches = false;
+                    if (!rule.or) {
+                        this.pos = localPos;
+                        break;
+                    }
                 }
             }
         }
         var gotOne = (rule.or && oneMatch) || allMatches;
         var success = gotOne || maybe === true;
+        var numMatches = gotOne ? 1 : 0;
         if (maybe && !gotOne)
             this.pos = pos;
-        if (success)
+        if (success) {
             this.matchSuccess();
-        else
+        }
+        else {
             this.matchFail(pos);
-        return { success: success, results: results, numMatches: gotOne ? 1 : 0 };
+        }
+        return { success: success, results: results, numMatches: numMatches };
     };
     // Try to match multiple (one or more) instances of the rule. If `maybe` is set,
     // then a failed match is also a success (but the position is reset).
@@ -21611,9 +21671,9 @@ var Parser = /** @class */ (function () {
         var more = true;
         do {
             var result = this.expectOne(rule);
-            if (result.success) {
+            if (result.success && result.results) {
                 numMatches++;
-                results.push(result.results);
+                results.push.apply(results, result.results);
             }
             else {
                 more = false;
@@ -21622,28 +21682,36 @@ var Parser = /** @class */ (function () {
         var success = numMatches > 0 || maybe === true;
         if (maybe && !(numMatches > 0))
             this.pos = pos;
-        if (success)
+        if (success) {
             this.matchSuccess();
-        else
+        }
+        else {
             this.matchFail(pos);
+        }
         return { success: success, results: results, numMatches: numMatches };
     };
     // Match zero or more instances of `rule`. Offloads to `expectOneOrMore`.
     Parser.prototype.expectZeroOrMore = function (rule) {
         return this.expectOneOrMore(rule, true);
     };
-    // Execute the rule produced by the provided the `rules` function. This
-    // ofloads to one of the above matchers and consolidates the results. It is also
+    // Execute the rule produced by the provided `rules` function. This
+    // offloads to one of the above matchers and consolidates the results. It is also
     // responsible for executing any code triggered by the rule (in `rule.run`.)
-    Parser.prototype.expect = function (rules) {
-        L('Evaluating rules:', rules);
-        var result;
-        if (!rules) {
-            throw new exports.X('Invalid Rule: ' + rules, rules);
+    Parser.prototype.expect = function (ruleFunc) {
+        L('Evaluating rule function:', ruleFunc);
+        if (!ruleFunc) {
+            throw new exports.X('Invalid rule function: ' + ruleFunc, ruleFunc);
         }
+        var result;
         // Get rule from Grammar class.
-        var rule = rules.bind(this.grammar)();
+        // expect(...) handles both lexing & parsing:
+        // - lexer rules produce tokens.
+        // - parser rules produce expressions which may trigger code via the
+        //   { run: () => ... } trigger functions in easyscore.ts.
+        //   These functions build the VexFlow objects that are displayed on screen.
+        var rule = ruleFunc.bind(this.grammar)();
         if (rule.token) {
+            // A lexer rule has a `token` property.
             // Base case: parse the regex and throw an error if the
             // line doesn't match.
             result = this.matchToken(rule.token, rule.noSpace === true);
@@ -21654,6 +21722,7 @@ var Parser = /** @class */ (function () {
             }
         }
         else if (rule.expect) {
+            // A parser rule has an `expect` property.
             if (rule.oneOrMore) {
                 result = this.expectOneOrMore(rule);
             }
@@ -21667,14 +21736,22 @@ var Parser = /** @class */ (function () {
         else {
             throw new exports.X('Bad grammar! No `token` or `expect` property', rule);
         }
-        // If there's a trigger attached to this rule, then pull it.
-        result.matches = [];
-        if (result.results)
-            result.results.forEach(function (r) { return result.matches.push(flattenMatches(r)); });
-        if (rule.run && result.success)
-            rule.run(result);
+        // If there's a trigger attached to this rule, then run it.
+        // Make the matches accessible through `state.matches` in the
+        // `run: (state) => ...` trigger.
+        var matches = [];
+        result.matches = matches;
+        if (result.results) {
+            result.results.forEach(function (r) {
+                matches.push(flattenMatches(r));
+            });
+        }
+        if (rule.run && result.success) {
+            rule.run({ matches: matches });
+        }
         return result;
     };
+    Parser.DEBUG = false;
     return Parser;
 }());
 exports.Parser = Parser;
@@ -22781,16 +22858,16 @@ var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var element_1 = __webpack_require__(/*! ./element */ "./src/element.ts");
 var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
 var stavebarline_1 = __webpack_require__(/*! ./stavebarline */ "./src/stavebarline.js");
-var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.js");
+var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.ts");
 var staverepetition_1 = __webpack_require__(/*! ./staverepetition */ "./src/staverepetition.js");
-var stavesection_1 = __webpack_require__(/*! ./stavesection */ "./src/stavesection.js");
-var stavetempo_1 = __webpack_require__(/*! ./stavetempo */ "./src/stavetempo.js");
+var stavesection_1 = __webpack_require__(/*! ./stavesection */ "./src/stavesection.ts");
+var stavetempo_1 = __webpack_require__(/*! ./stavetempo */ "./src/stavetempo.ts");
 var stavetext_1 = __webpack_require__(/*! ./stavetext */ "./src/stavetext.js");
-var boundingbox_1 = __webpack_require__(/*! ./boundingbox */ "./src/boundingbox.js");
-var clef_1 = __webpack_require__(/*! ./clef */ "./src/clef.js");
+var boundingbox_1 = __webpack_require__(/*! ./boundingbox */ "./src/boundingbox.ts");
+var clef_1 = __webpack_require__(/*! ./clef */ "./src/clef.ts");
 var keysignature_1 = __webpack_require__(/*! ./keysignature */ "./src/keysignature.js");
 var timesignature_1 = __webpack_require__(/*! ./timesignature */ "./src/timesignature.js");
-var stavevolta_1 = __webpack_require__(/*! ./stavevolta */ "./src/stavevolta.js");
+var stavevolta_1 = __webpack_require__(/*! ./stavevolta */ "./src/stavevolta.ts");
 var Stave = /** @class */ (function (_super) {
     __extends(Stave, _super);
     function Stave(x, y, width, options) {
@@ -22906,9 +22983,7 @@ var Stave = /** @class */ (function (_super) {
         this.end_x += shift;
         for (var i = 0; i < this.modifiers.length; i++) {
             var mod = this.modifiers[i];
-            if (mod.x !== undefined) {
-                mod.x += shift;
-            }
+            mod.setX(mod.getX() + shift);
         }
         return this;
     };
@@ -23423,7 +23498,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Barline = void 0;
 var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
-var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.js");
+var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.ts");
 var Barline = /** @class */ (function (_super) {
     __extends(Barline, _super);
     /**
@@ -24411,9 +24486,9 @@ exports.StaveLine = StaveLine;
 
 /***/ }),
 
-/***/ "./src/stavemodifier.js":
+/***/ "./src/stavemodifier.ts":
 /*!******************************!*\
-  !*** ./src/stavemodifier.js ***!
+  !*** ./src/stavemodifier.ts ***!
   \******************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -24440,28 +24515,32 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.StaveModifier = void 0;
+exports.StaveModifier = exports.Position = void 0;
 var element_1 = __webpack_require__(/*! ./element */ "./src/element.ts");
+var Position;
+(function (Position) {
+    Position[Position["CENTER"] = 0] = "CENTER";
+    Position[Position["LEFT"] = 1] = "LEFT";
+    Position[Position["RIGHT"] = 2] = "RIGHT";
+    Position[Position["ABOVE"] = 3] = "ABOVE";
+    Position[Position["BELOW"] = 4] = "BELOW";
+    Position[Position["BEGIN"] = 5] = "BEGIN";
+    Position[Position["END"] = 6] = "END";
+})(Position = exports.Position || (exports.Position = {}));
 var StaveModifier = /** @class */ (function (_super) {
     __extends(StaveModifier, _super);
     function StaveModifier() {
         var _this = _super.call(this) || this;
+        _this.width = 0;
+        _this.x = 0;
         _this.setAttribute('type', 'StaveModifier');
         _this.padding = 10;
         _this.position = StaveModifier.Position.ABOVE;
-        _this.layoutMetrics = null;
         return _this;
     }
     Object.defineProperty(StaveModifier, "Position", {
         get: function () {
-            return {
-                LEFT: 1,
-                RIGHT: 2,
-                ABOVE: 3,
-                BELOW: 4,
-                BEGIN: 5,
-                END: 6,
-            };
+            return Position;
         },
         enumerable: false,
         configurable: true
@@ -24497,20 +24576,6 @@ var StaveModifier = /** @class */ (function (_super) {
     StaveModifier.prototype.getCategory = function () {
         return '';
     };
-    StaveModifier.prototype.makeSpacer = function (padding) {
-        // TODO(0xfe): Return an instance of type `Spacer` based on `GhostNote`
-        // instead of this hack.
-        return {
-            getContext: function () {
-                return true;
-            },
-            setStave: function () { },
-            renderToStave: function () { },
-            getMetrics: function () {
-                return { width: padding };
-            },
-        };
-    };
     StaveModifier.prototype.placeGlyphOnLine = function (glyph, stave, line, customShift) {
         if (customShift === void 0) { customShift = 0; }
         glyph.setYShift(stave.getYForLine(line) - stave.getYForGlyphs() + customShift);
@@ -24528,6 +24593,11 @@ var StaveModifier = /** @class */ (function (_super) {
     };
     StaveModifier.prototype.getLayoutMetrics = function () {
         return this.layoutMetrics;
+    };
+    StaveModifier.prototype.draw = function (
+    // eslint-disable-next-line
+    element, x_shift) {
+        // do nothing
     };
     return StaveModifier;
 }(element_1.Element));
@@ -24585,7 +24655,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StaveNote = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
-var boundingbox_1 = __webpack_require__(/*! ./boundingbox */ "./src/boundingbox.js");
+var boundingbox_1 = __webpack_require__(/*! ./boundingbox */ "./src/boundingbox.ts");
 var stem_1 = __webpack_require__(/*! ./stem */ "./src/stem.ts");
 var notehead_1 = __webpack_require__(/*! ./notehead */ "./src/notehead.js");
 var stemmablenote_1 = __webpack_require__(/*! ./stemmablenote */ "./src/stemmablenote.ts");
@@ -25326,7 +25396,7 @@ var StaveNote = /** @class */ (function (_super) {
         }
         else if (typeof a === 'number' && typeof b === 'object') {
             // eslint-disable-next-line
-            console.warn("deprecated call signature to addModifier, use addModifier(modifier, index) instead");
+            console.warn('deprecated call signature to addModifier, use addModifier(modifier, index) instead');
             index = a;
             modifier = b;
         }
@@ -25544,20 +25614,22 @@ var StaveNote = /** @class */ (function (_super) {
         ctx.closeGroup();
     };
     StaveNote.prototype.shouldDrawFlag = function () {
-        var hasFlag = this.getGlyph().flag; // this.glyph.flag is a boolean, as specified in tables.js
+        var hasStem = this.stem !== undefined;
+        var hasFlag = this.glyph.flag; // specified in tables.js
         var hasNoBeam = this.beam === undefined;
-        return hasFlag && hasNoBeam;
+        return hasStem && hasFlag && hasNoBeam;
     };
     // Draw the flag for the note
     StaveNote.prototype.drawFlag = function () {
-        var _a, _b, _c;
+        var _a;
         var ctx = this.checkContext();
         if (!ctx) {
             throw new vex_1.Vex.RERR('NoCanvasContext', "Can't draw without a canvas context.");
         }
         if (this.shouldDrawFlag()) {
-            var _d = this.getNoteHeadBounds(), y_top = _d.y_top, y_bottom = _d.y_bottom;
-            var noteStemHeight = (_b = (_a = this.stem) === null || _a === void 0 ? void 0 : _a.getHeight()) !== null && _b !== void 0 ? _b : 0;
+            var _b = this.getNoteHeadBounds(), y_top = _b.y_top, y_bottom = _b.y_bottom;
+            // eslint-disable-next-line
+            var noteStemHeight = this.stem.getHeight();
             var flagX = this.getStemX();
             // FIXME: What's with the magic +/- 2
             // ANSWER: a corner of the note stem pokes out beyond the tip of the flag.
@@ -25571,7 +25643,7 @@ var StaveNote = /** @class */ (function (_super) {
             // Draw the Flag
             ctx.openGroup('flag', undefined, { pointerBBox: true });
             this.applyStyle(ctx, this.getFlagStyle());
-            (_c = this.flag) === null || _c === void 0 ? void 0 : _c.render(ctx, flagX, flagY);
+            (_a = this.flag) === null || _a === void 0 ? void 0 : _a.render(ctx, flagX, flagY);
             this.restoreStyle(ctx, this.getFlagStyle());
             ctx.closeGroup();
         }
@@ -25597,7 +25669,7 @@ var StaveNote = /** @class */ (function (_super) {
         // If we will render a flag, we shorten the stem so that the tip
         // does not poke through the flag.
         if (this.shouldDrawFlag() && this.stem) {
-            this.stem.renderHeightAdjustment = -3;
+            this.stem.adjustHeightForFlag();
         }
         ctx.openGroup('stem', undefined, { pointerBBox: true });
         (_a = this.stem) === null || _a === void 0 ? void 0 : _a.setContext(ctx).draw();
@@ -25710,7 +25782,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Repetition = void 0;
-var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.js");
+var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.ts");
 var glyph_1 = __webpack_require__(/*! ./glyph */ "./src/glyph.ts");
 var Repetition = /** @class */ (function (_super) {
     __extends(Repetition, _super);
@@ -25854,9 +25926,9 @@ exports.Repetition = Repetition;
 
 /***/ }),
 
-/***/ "./src/stavesection.js":
+/***/ "./src/stavesection.ts":
 /*!*****************************!*\
-  !*** ./src/stavesection.js ***!
+  !*** ./src/stavesection.ts ***!
   \*****************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -25882,7 +25954,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StaveSection = void 0;
-var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.js");
+var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.ts");
 var StaveSection = /** @class */ (function (_super) {
     __extends(StaveSection, _super);
     function StaveSection(section, x, shift_y) {
@@ -25926,7 +25998,7 @@ var StaveSection = /** @class */ (function (_super) {
         var ctx = stave.checkContext();
         this.setRendered();
         ctx.save();
-        ctx.lineWidth = 2;
+        ctx.setLineWidth(2);
         ctx.setFont(this.font.family, this.font.size, this.font.weight);
         var text_width = ctx.measureText('' + this.section).width;
         var width = text_width + 6; // add left & right padding
@@ -25937,7 +26009,7 @@ var StaveSection = /** @class */ (function (_super) {
         var y = stave.getYForTopText(3) + this.shift_y;
         var x = this.x + shift_x;
         ctx.beginPath();
-        ctx.lineWidth = 2;
+        ctx.setLineWidth(2);
         ctx.rect(x, y, width, height);
         ctx.stroke();
         x += (width - text_width) / 2;
@@ -25952,9 +26024,9 @@ exports.StaveSection = StaveSection;
 
 /***/ }),
 
-/***/ "./src/stavetempo.js":
+/***/ "./src/stavetempo.ts":
 /*!***************************!*\
-  !*** ./src/stavetempo.js ***!
+  !*** ./src/stavetempo.ts ***!
   \***************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -25981,8 +26053,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StaveTempo = void 0;
 var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
-var modifier_1 = __webpack_require__(/*! ./modifier */ "./src/modifier.ts");
-var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.js");
+var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.ts");
 var glyph_1 = __webpack_require__(/*! ./glyph */ "./src/glyph.ts");
 var StaveTempo = /** @class */ (function (_super) {
     __extends(StaveTempo, _super);
@@ -25990,7 +26061,7 @@ var StaveTempo = /** @class */ (function (_super) {
         var _this = _super.call(this) || this;
         _this.setAttribute('type', 'StaveTempo');
         _this.tempo = tempo;
-        _this.position = modifier_1.Modifier.Position.ABOVE;
+        _this.position = stavemodifier_1.StaveModifier.Position.ABOVE;
         _this.x = x;
         _this.shift_x = 10;
         _this.shift_y = shift_y;
@@ -26121,7 +26192,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StaveText = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
-var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.js");
+var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.ts");
 var textnote_1 = __webpack_require__(/*! ./textnote */ "./src/textnote.js");
 var StaveText = /** @class */ (function (_super) {
     __extends(StaveText, _super);
@@ -26420,9 +26491,9 @@ exports.StaveTie = StaveTie;
 
 /***/ }),
 
-/***/ "./src/stavevolta.js":
+/***/ "./src/stavevolta.ts":
 /*!***************************!*\
-  !*** ./src/stavevolta.js ***!
+  !*** ./src/stavevolta.ts ***!
   \***************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -26447,8 +26518,16 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Volta = void 0;
-var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.js");
+exports.Volta = exports.VoltaType = void 0;
+var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.ts");
+var VoltaType;
+(function (VoltaType) {
+    VoltaType[VoltaType["NONE"] = 1] = "NONE";
+    VoltaType[VoltaType["BEGIN"] = 2] = "BEGIN";
+    VoltaType[VoltaType["MID"] = 3] = "MID";
+    VoltaType[VoltaType["END"] = 4] = "END";
+    VoltaType[VoltaType["BEGIN_END"] = 5] = "BEGIN_END";
+})(VoltaType = exports.VoltaType || (exports.VoltaType = {}));
 var Volta = /** @class */ (function (_super) {
     __extends(Volta, _super);
     function Volta(type, number, x, y_shift) {
@@ -26474,13 +26553,7 @@ var Volta = /** @class */ (function (_super) {
     });
     Object.defineProperty(Volta, "type", {
         get: function () {
-            return {
-                NONE: 1,
-                BEGIN: 2,
-                MID: 3,
-                END: 4,
-                BEGIN_END: 5,
-            };
+            return VoltaType;
         },
         enumerable: false,
         configurable: true
@@ -26495,9 +26568,9 @@ var Volta = /** @class */ (function (_super) {
     Volta.prototype.draw = function (stave, x) {
         var ctx = stave.checkContext();
         this.setRendered();
-        var width = stave.width - x; // don't include x (offset) for width
-        var top_y = stave.getYForTopText(stave.options.num_lines) + this.y_shift;
-        var vert_height = 1.5 * stave.options.spacing_between_lines_px;
+        var width = stave.getWidth() - x; // don't include x (offset) for width
+        var top_y = stave.getYForTopText(stave.getOptions().num_lines) + this.y_shift;
+        var vert_height = 1.5 * stave.getOptions().spacing_between_lines_px;
         switch (this.volta) {
             case Volta.type.BEGIN:
                 ctx.fillRect(this.x + x, top_y, 1, vert_height);
@@ -26566,17 +26639,10 @@ var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var element_1 = __webpack_require__(/*! ./element */ "./src/element.ts");
 var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
 // To enable logging for this class. Set `Vex.Flow.Stem.DEBUG` to `true`.
+// eslint-disable-next-line
 function L() {
-    // eslint-disable-next-line
     var args = [];
-    for (
-    // eslint-disable-next-line
-    var _i = 0; 
-    // eslint-disable-next-line
-    _i < arguments.length; 
-    // eslint-disable-next-line
-    _i++) {
-        // eslint-disable-next-line
+    for (var _i = 0; _i < arguments.length; _i++) {
         args[_i] = arguments[_i];
     }
     if (Stem.DEBUG)
@@ -26709,6 +26775,12 @@ var Stem = /** @class */ (function (_super) {
         this.isStemlet = isStemlet;
         this.stemletHeight = stemletHeight;
         return this;
+    };
+    Stem.prototype.adjustHeightForFlag = function () {
+        this.renderHeightAdjustment = this.musicFont.lookupMetric('stem.heightAdjustmentForFlag', -3);
+    };
+    Stem.prototype.adjustHeightForBeam = function () {
+        this.renderHeightAdjustment = -Stem.WIDTH / 2;
     };
     // Render the stem onto the canvas
     Stem.prototype.draw = function () {
@@ -28338,6 +28410,7 @@ var Flow = {
     durationToFraction: durationToFraction,
     durationToNumber: durationToNumber,
     getGlyphProps: getGlyphProps,
+    textWidth: textWidth,
 };
 exports.Flow = Flow;
 Flow.clefProperties = function (clef) {
@@ -28512,7 +28585,9 @@ Flow.tabToGlyph = function (fret, scale) {
         shift_y: shift_y,
     };
 };
-Flow.textWidth = function (text) { return 7 * text.toString().length; };
+function textWidth(text) {
+    return 7 * text.toString().length;
+}
 Flow.articulationCodes = function (artic) { return Flow.articulationCodes.articulations[artic]; };
 Flow.articulationCodes.articulations = {
     'a.': { code: 'augmentationDot', between_lines: true },
@@ -31686,7 +31761,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TimeSignature = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var glyph_1 = __webpack_require__(/*! ./glyph */ "./src/glyph.ts");
-var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.js");
+var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemodifier.ts");
 var assertIsValidFraction = function (timeSpec) {
     var numbers = timeSpec.split('/').filter(function (number) { return number !== ''; });
     if (numbers.length !== 2) {
@@ -32669,7 +32744,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Vibrato = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var modifier_1 = __webpack_require__(/*! ./modifier */ "./src/modifier.ts");
-var bend_1 = __webpack_require__(/*! ./bend */ "./src/bend.js");
+var bend_1 = __webpack_require__(/*! ./bend */ "./src/bend.ts");
 var Vibrato = /** @class */ (function (_super) {
     __extends(Vibrato, _super);
     // ## Prototype Methods
@@ -32790,9 +32865,9 @@ exports.Vibrato = Vibrato;
 
 /***/ }),
 
-/***/ "./src/vibratobracket.js":
+/***/ "./src/vibratobracket.ts":
 /*!*******************************!*\
-  !*** ./src/vibratobracket.js ***!
+  !*** ./src/vibratobracket.ts ***!
   \*******************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -32828,8 +32903,16 @@ var element_1 = __webpack_require__(/*! ./element */ "./src/element.ts");
 var vibrato_1 = __webpack_require__(/*! ./vibrato */ "./src/vibrato.ts");
 // To enable logging for this class. Set `Vex.Flow.VibratoBracket.DEBUG` to `true`.
 function L() {
+    // eslint-disable-next-line
     var args = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
+    for (
+    // eslint-disable-next-line
+    var _i = 0; 
+    // eslint-disable-next-line
+    _i < arguments.length; 
+    // eslint-disable-next-line
+    _i++) {
+        // eslint-disable-next-line
         args[_i] = arguments[_i];
     }
     if (VibratoBracket.DEBUG)
@@ -32855,6 +32938,7 @@ var VibratoBracket = /** @class */ (function (_super) {
             wave_height: 6,
             wave_width: 4,
             wave_girth: 2,
+            vibrato_width: 0,
         };
         return _this;
     }
@@ -32869,7 +32953,7 @@ var VibratoBracket = /** @class */ (function (_super) {
     };
     // Draw the vibrato bracket on the rendering context
     VibratoBracket.prototype.draw = function () {
-        var ctx = this.context;
+        var ctx = this.checkContext();
         this.setRendered();
         var y = this.start
             ? this.start.getStave().getYForTopText(this.line)
@@ -32893,9 +32977,9 @@ exports.VibratoBracket = VibratoBracket;
 
 /***/ }),
 
-/***/ "./src/voice.js":
+/***/ "./src/voice.ts":
 /*!**********************!*\
-  !*** ./src/voice.js ***!
+  !*** ./src/voice.ts ***!
   \**********************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -32935,11 +33019,17 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Voice = void 0;
+exports.Voice = exports.VoiceMode = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 var element_1 = __webpack_require__(/*! ./element */ "./src/element.ts");
 var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
 var fraction_1 = __webpack_require__(/*! ./fraction */ "./src/fraction.ts");
+var VoiceMode;
+(function (VoiceMode) {
+    VoiceMode[VoiceMode["STRICT"] = 1] = "STRICT";
+    VoiceMode[VoiceMode["SOFT"] = 2] = "SOFT";
+    VoiceMode[VoiceMode["FULL"] = 3] = "FULL";
+})(VoiceMode = exports.VoiceMode || (exports.VoiceMode = {}));
 var Voice = /** @class */ (function (_super) {
     __extends(Voice, _super);
     function Voice(time, options) {
@@ -32951,8 +33041,8 @@ var Voice = /** @class */ (function (_super) {
             var match = time.match(/(\d+)\/(\d+)/);
             if (match) {
                 time = {
-                    num_beats: match[1],
-                    beat_value: match[2],
+                    num_beats: parseInt(match[1]),
+                    beat_value: parseInt(match[2]),
                     resolution: tables_1.Flow.RESOLUTION,
                 };
             }
@@ -32971,11 +33061,8 @@ var Voice = /** @class */ (function (_super) {
         _this.ticksUsed = new fraction_1.Fraction(0, 1);
         _this.smallestTickCount = _this.totalTicks.clone();
         _this.largestTickWidth = 0;
-        _this.stave = null;
         // Do we care about strictly timed notes
         _this.mode = Voice.Mode.STRICT;
-        // This must belong to a VoiceGroup
-        _this.voiceGroup = null;
         return _this;
     }
     Object.defineProperty(Voice, "Mode", {
@@ -32986,11 +33073,7 @@ var Voice = /** @class */ (function (_super) {
         // FULL:   Ticks do not need to fill the voice, but can't exceed the maximum
         //         tick length.
         get: function () {
-            return {
-                STRICT: 1,
-                SOFT: 2,
-                FULL: 3,
-            };
+            return VoiceMode;
         },
         enumerable: false,
         configurable: true
@@ -33034,7 +33117,7 @@ var Voice = /** @class */ (function (_super) {
     // Set the voice's stave
     Voice.prototype.setStave = function (stave) {
         this.stave = stave;
-        this.boundingBox = null; // Reset bounding box so we can reformat
+        this.boundingBox = undefined; // Reset bounding box so we can reformat
         return this;
     };
     // Get the bounding box for the voice
@@ -33047,7 +33130,7 @@ var Voice = /** @class */ (function (_super) {
             if (!this.stave)
                 throw new vex_1.Vex.RERR('NoStave', "Can't get bounding box without stave.");
             stave = this.stave;
-            boundingBox = null;
+            boundingBox = undefined;
             for (i = 0; i < this.tickables.length; ++i) {
                 this.tickables[i].setStave(stave);
                 bb = this.tickables[i].getBoundingBox();
@@ -33108,7 +33191,7 @@ var Voice = /** @class */ (function (_super) {
     Voice.prototype.softmax = function (tickValue) {
         var _this = this;
         if (!this.expTicksUsed) {
-            this.reCalculateExpTicksUsed();
+            this.expTicksUsed = this.reCalculateExpTicksUsed();
         }
         var totalTicks = this.ticksUsed.value();
         var exp = function (v) { return Math.pow(_this.options.softmaxFactor, v / totalTicks); };
@@ -33149,12 +33232,15 @@ var Voice = /** @class */ (function (_super) {
     };
     // Preformats the voice by applying the voice's stave to each note.
     Voice.prototype.preFormat = function () {
-        var _this = this;
         if (this.preFormatted)
             return this;
+        var stave = this.stave;
+        if (!stave) {
+            throw new vex_1.Vex.RERR('NoStave', "Can't preFormat without stave.");
+        }
         this.tickables.forEach(function (tickable) {
             if (!tickable.getStave()) {
-                tickable.setStave(_this.stave);
+                tickable.setStave(stave);
             }
         });
         this.preFormatted = true;
@@ -33164,10 +33250,10 @@ var Voice = /** @class */ (function (_super) {
     // If `stave` is omitted, it is expected that the notes have staves
     // already set.
     Voice.prototype.draw = function (context, stave) {
-        if (context === void 0) { context = this.context; }
+        if (context === void 0) { context = this.checkContext(); }
         if (stave === void 0) { stave = this.stave; }
         this.setRendered();
-        var boundingBox = null;
+        var boundingBox = undefined;
         for (var i = 0; i < this.tickables.length; ++i) {
             var tickable = this.tickables[i];
             // Set the stave if provided
