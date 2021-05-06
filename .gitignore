@@ -19,4 +19,4 @@ yarn-error.log*
 
 .vercel
 
-js/vexflow-localhost.js
+/public/js/vexflow-localhost.js
