@@ -16,7 +16,7 @@ namespace Tests_Parser {
         if (isNaN(num) || num < 0 || num >= tests.length) {
             return test0;
         } else {
-            tests[num];
+            return tests[num];
         }
     }
 
