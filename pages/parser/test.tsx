@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import App, { Constants } from "app/app";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Tests from "app/tests/Tests_Parser";
 import Spacer from "app/components/Spacer";
 import { GetServerSideProps } from "next";
@@ -9,11 +9,12 @@ import { GetServerSideProps } from "next";
 export default function TestPage({ queryParams }) {
     const { vexVersion, vexURL } = App.getVexVersionAndURL(queryParams);
 
-    const testNumber = queryParams.test_number;
+    const testNumber = parseInt(queryParams.test_number);
     const title = `Parser - ${testNumber} - ${vexVersion}`;
+    const testDescription = Tests.getDescriptionForTest(testNumber);
 
     useEffect(() => {
-        Tests.runTest(parseInt(testNumber));
+        Tests.runTest(testNumber);
     }, []);
 
     return (
@@ -30,6 +31,7 @@ export default function TestPage({ queryParams }) {
                 <Spacer />
                 {title}
             </h1>
+            <p>{testDescription}</p>
             <p>Open the Developer Console!</p>
         </>
     );
