@@ -4938,7 +4938,7 @@ exports.EasyScore = EasyScore;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Element = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
-var registry_1 = __webpack_require__(/*! ./registry */ "./src/registry.js");
+var registry_1 = __webpack_require__(/*! ./registry */ "./src/registry.ts");
 var tables_1 = __webpack_require__(/*! ./tables */ "./src/tables.js");
 /**
  * Element implements a generic base class for VexFlow, with implementations
@@ -4948,6 +4948,7 @@ var Element = /** @class */ (function () {
     /** Constructor. */
     function Element(_a) {
         var _b = _a === void 0 ? {} : _a, type = _b.type;
+        var _c;
         this.attrs = {
             id: Element.newID(),
             el: undefined,
@@ -4958,9 +4959,7 @@ var Element = /** @class */ (function () {
         this.fontStack = tables_1.Flow.DEFAULT_FONT_STACK;
         this.musicFont = tables_1.Flow.DEFAULT_FONT_STACK[0];
         // If a default registry exist, then register with it right away.
-        if (registry_1.Registry.getDefaultRegistry()) {
-            registry_1.Registry.getDefaultRegistry().register(this);
-        }
+        (_c = registry_1.Registry.getDefaultRegistry()) === null || _c === void 0 ? void 0 : _c.register(this);
     }
     Element.newID = function () {
         return "auto" + Element.ID++;
@@ -5032,10 +5031,10 @@ var Element = /** @class */ (function () {
         this.attrs.classes[className] = true;
         if (this.registry) {
             this.registry.onUpdate({
-                id: this.getAttribute('id'),
+                id: this.attrs.id,
                 name: 'class',
                 value: className,
-                oldValue: null,
+                oldValue: undefined,
             });
         }
         return this;
@@ -5045,9 +5044,9 @@ var Element = /** @class */ (function () {
         delete this.attrs.classes[className];
         if (this.registry) {
             this.registry.onUpdate({
-                id: this.getAttribute('id'),
+                id: this.attrs.id,
                 name: 'class',
-                value: null,
+                value: undefined,
                 oldValue: className,
             });
         }
@@ -5073,21 +5072,19 @@ var Element = /** @class */ (function () {
         return this.attrs;
     };
     /** Returns an attribute. */
-    Element.prototype.getAttribute = function (
     // eslint-disable-next-line
-    name) {
+    Element.prototype.getAttribute = function (name) {
         return this.attrs[name];
     };
     /** Sets an attribute. */
-    Element.prototype.setAttribute = function (
     // eslint-disable-next-line
-    name, value) {
-        var id = this.attrs.id;
+    Element.prototype.setAttribute = function (name, value) {
+        var oldID = this.attrs.id;
         var oldValue = this.attrs[name];
         this.attrs[name] = value;
         if (this.registry) {
             // Register with old id to support id changes.
-            this.registry.onUpdate({ id: id, name: name, value: value, oldValue: oldValue });
+            this.registry.onUpdate({ id: oldID, name: name, value: value, oldValue: oldValue });
         }
         return this;
     };
@@ -18694,8 +18691,8 @@ var system_1 = __webpack_require__(/*! ./system */ "./src/system.js");
 var factory_1 = __webpack_require__(/*! ./factory */ "./src/factory.js");
 var parser_1 = __webpack_require__(/*! ./parser */ "./src/parser.ts");
 var easyscore_1 = __webpack_require__(/*! ./easyscore */ "./src/easyscore.js");
-var registry_1 = __webpack_require__(/*! ./registry */ "./src/registry.js");
-var stavetext_1 = __webpack_require__(/*! ./stavetext */ "./src/stavetext.js");
+var registry_1 = __webpack_require__(/*! ./registry */ "./src/registry.ts");
+var stavetext_1 = __webpack_require__(/*! ./stavetext */ "./src/stavetext.ts");
 var glyphnote_1 = __webpack_require__(/*! ./glyphnote */ "./src/glyphnote.ts");
 var repeatnote_1 = __webpack_require__(/*! ./repeatnote */ "./src/repeatnote.ts");
 var textfont_1 = __webpack_require__(/*! ./textfont */ "./src/textfont.ts");
@@ -21673,7 +21670,7 @@ var Parser = /** @class */ (function () {
             var result = this.expectOne(rule);
             if (result.success && result.results) {
                 numMatches++;
-                results.push.apply(results, result.results);
+                results.push(result.results);
             }
             else {
                 more = false;
@@ -22414,9 +22411,9 @@ exports.RaphaelContext = RaphaelContext;
 
 /***/ }),
 
-/***/ "./src/registry.js":
+/***/ "./src/registry.ts":
 /*!*************************!*\
-  !*** ./src/registry.js ***!
+  !*** ./src/registry.ts ***!
   \*************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -22432,9 +22429,9 @@ exports.RaphaelContext = RaphaelContext;
 // to track, query, and manage some subset of generated elements, and
 // dynamically get and set attributes.
 //
-// There are two ways to regiser with a registry:
+// There are two ways to register with a registry:
 //
-// 1) Explicitly call `element.register(registry)`, or,
+// 1) Explicitly call `registry.register(elem:Element, id?:string)`, or,
 // 2) Call `Registry.enableDefaultRegistry(registry)` when ready, and all future
 //    elements will automatically register with it.
 //
@@ -22445,84 +22442,83 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Registry = exports.X = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
 exports.X = vex_1.Vex.MakeException('RegistryError');
-function setIndexValue(index, name, value, id, elem) {
-    if (!index[name][value])
-        index[name][value] = {};
-    index[name][value][id] = elem;
-}
+// Indexes are represented as maps of maps of maps. This allows
+// for both multi-labeling (e.g., an element can have multiple classes)
+// and efficient lookup.
+var Index = /** @class */ (function () {
+    function Index() {
+        this.id = {};
+        this.type = {};
+        this.class = {};
+    }
+    return Index;
+}());
 var Registry = /** @class */ (function () {
     function Registry() {
-        this.clear();
+        this.index = new Index();
     }
-    Object.defineProperty(Registry, "INDEXES", {
-        get: function () {
-            return ['type'];
-        },
-        enumerable: false,
-        configurable: true
-    });
+    Registry.getDefaultRegistry = function () {
+        return Registry.defaultRegistry;
+    };
     // If you call `enableDefaultRegistry`, any new elements will auto-register with
     // the provided registry as soon as they're constructed.
     Registry.enableDefaultRegistry = function (registry) {
         Registry.defaultRegistry = registry;
     };
-    Registry.getDefaultRegistry = function () {
-        return Registry.defaultRegistry;
-    };
     Registry.disableDefaultRegistry = function () {
-        Registry.defaultRegistry = null;
+        Registry.defaultRegistry = undefined;
     };
     Registry.prototype.clear = function () {
-        // Indexes are represented as maps of maps (of maps). This allows
-        // for both multi-labeling (e.g., an element can have multiple classes)
-        // and efficient lookup.
-        this.index = {
-            id: {},
-            type: {},
-            class: {},
-        };
+        this.index = new Index();
         return this;
+    };
+    Registry.prototype.setIndexValue = function (name, value, id, elem) {
+        var index = this.index;
+        if (!index[name][value]) {
+            index[name][value] = {};
+        }
+        index[name][value][id] = elem;
     };
     // Updates the indexes for element 'id'. If an element's attribute changes
     // from A -> B, make sure to remove the element from A.
     Registry.prototype.updateIndex = function (_a) {
         var id = _a.id, name = _a.name, value = _a.value, oldValue = _a.oldValue;
         var elem = this.getElementById(id);
-        if (oldValue !== null && this.index[name][oldValue]) {
+        if (oldValue !== undefined && this.index[name][oldValue]) {
             delete this.index[name][oldValue][id];
         }
-        if (value !== null) {
-            setIndexValue(this.index, name, value, elem.getAttribute('id'), elem);
+        if (value && elem) {
+            this.setIndexValue(name, value, elem.getAttribute('id'), elem);
         }
     };
     // Register element `elem` with this registry. This adds the element to its index and watches
     // it for attribute changes.
     Registry.prototype.register = function (elem, id) {
-        var _this = this;
         id = id || elem.getAttribute('id');
         if (!id) {
             throw new exports.X("Can't add element without `id` attribute to registry", elem);
         }
         // Manually add id to index, then update other indexes.
         elem.setAttribute('id', id);
-        setIndexValue(this.index, 'id', id, id, elem);
-        Registry.INDEXES.forEach(function (name) {
-            _this.updateIndex({ id: id, name: name, value: elem.getAttribute(name), oldValue: null });
-        });
+        this.setIndexValue('id', id, id, elem);
+        this.updateIndex({ id: id, name: 'type', value: elem.getAttribute('type'), oldValue: undefined });
         elem.onRegister(this);
         return this;
     };
     Registry.prototype.getElementById = function (id) {
-        return this.index.id[id] ? this.index.id[id][id] : null;
+        var _a, _b;
+        return (_b = (_a = this.index.id) === null || _a === void 0 ? void 0 : _a[id]) === null || _b === void 0 ? void 0 : _b[id]; // return undefined if the id is not found.
     };
-    Registry.prototype.getElementsByAttribute = function (attrName, value) {
-        var index = this.index[attrName];
-        if (index && index[value]) {
-            return Object.keys(index[value]).map(function (i) { return index[value][i]; });
+    Registry.prototype.getElementsByAttribute = function (attribute, value) {
+        var index_attr = this.index[attribute];
+        if (index_attr) {
+            var index_attr_val_1 = index_attr[value];
+            if (index_attr_val_1) {
+                var keys = Object.keys(index_attr_val_1);
+                return keys.map(function (k) { return index_attr_val_1[k]; });
+            }
         }
-        else {
-            return [];
-        }
+        return [];
     };
     Registry.prototype.getElementsByType = function (type) {
         return this.getElementsByAttribute('type', type);
@@ -22532,20 +22528,16 @@ var Registry = /** @class */ (function () {
     };
     // This is called by the element when an attribute value changes. If an indexed
     // attribute changes, then update the local index.
-    Registry.prototype.onUpdate = function (_a) {
-        var id = _a.id, name = _a.name, value = _a.value, oldValue = _a.oldValue;
-        function includes(array, value) {
-            return array.filter(function (x) { return x === value; }).length > 0;
+    Registry.prototype.onUpdate = function (info) {
+        var allowedNames = ['id', 'type', 'class'];
+        if (allowedNames.includes(info.name)) {
+            this.updateIndex(info);
         }
-        if (!includes(Registry.INDEXES.concat(['id', 'class']), name))
-            return this;
-        this.updateIndex({ id: id, name: name, value: value, oldValue: oldValue });
         return this;
     };
     return Registry;
 }());
 exports.Registry = Registry;
-Registry.defaultRegistry = null;
 
 
 /***/ }),
@@ -22862,7 +22854,7 @@ var stavemodifier_1 = __webpack_require__(/*! ./stavemodifier */ "./src/stavemod
 var staverepetition_1 = __webpack_require__(/*! ./staverepetition */ "./src/staverepetition.js");
 var stavesection_1 = __webpack_require__(/*! ./stavesection */ "./src/stavesection.ts");
 var stavetempo_1 = __webpack_require__(/*! ./stavetempo */ "./src/stavetempo.ts");
-var stavetext_1 = __webpack_require__(/*! ./stavetext */ "./src/stavetext.js");
+var stavetext_1 = __webpack_require__(/*! ./stavetext */ "./src/stavetext.ts");
 var boundingbox_1 = __webpack_require__(/*! ./boundingbox */ "./src/boundingbox.ts");
 var clef_1 = __webpack_require__(/*! ./clef */ "./src/clef.ts");
 var keysignature_1 = __webpack_require__(/*! ./keysignature */ "./src/keysignature.js");
@@ -26163,9 +26155,9 @@ exports.StaveTempo = StaveTempo;
 
 /***/ }),
 
-/***/ "./src/stavetext.js":
+/***/ "./src/stavetext.ts":
 /*!**************************!*\
-  !*** ./src/stavetext.js ***!
+  !*** ./src/stavetext.ts ***!
   \**************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -26189,6 +26181,17 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StaveText = void 0;
 var vex_1 = __webpack_require__(/*! ./vex */ "./src/vex.js");
@@ -26238,16 +26241,18 @@ var StaveText = /** @class */ (function (_super) {
         return this;
     };
     StaveText.prototype.setFont = function (font) {
-        vex_1.Vex.Merge(this.font, font);
+        this.font = __assign(__assign({}, this.font), font);
+        return this;
     };
     StaveText.prototype.setText = function (text) {
         this.text = text;
+        return this;
     };
     StaveText.prototype.draw = function (stave) {
         var ctx = stave.checkContext();
         this.setRendered();
         ctx.save();
-        ctx.lineWidth = 2;
+        ctx.setLineWidth(2);
         ctx.setFont(this.font.family, this.font.size, this.font.weight);
         var text_width = ctx.measureText('' + this.text).width;
         var x;
