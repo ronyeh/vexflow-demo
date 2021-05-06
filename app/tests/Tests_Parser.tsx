@@ -12,12 +12,20 @@ namespace Tests_Parser {
         return info;
     }
 
-    export function runTest(num: number) {
+    function getTest(num: number) {
         if (isNaN(num) || num < 0 || num >= tests.length) {
-            test0();
+            return test0;
         } else {
-            tests[num]();
+            tests[num];
         }
+    }
+
+    export function runTest(num: number) {
+        getTest(num)(); // RUN THE TEST!
+    }
+
+    export function getDescriptionForTest(num: number) {
+        return getTest(num).description;
     }
 
     function test0() {
