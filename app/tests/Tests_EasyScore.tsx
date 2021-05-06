@@ -2,12 +2,13 @@ import TestFunction from "./TestFunction";
 import TestInfo from "./TestInfo";
 
 namespace Tests_EasyScore {
+    const tests = [test0, test1, test2];
+
     export function getInfo() {
         const info = new TestInfo();
         info.title = "EasyScore";
-        const tests = [test0, test1, test2];
         info.numTests = tests.length;
-        info.testDescriptions = tests.map((test) => test.description ?? "");
+        info.testDescriptions = tests.map((test) => (test as TestFunction).description ?? "");
         return info;
     }
 
@@ -15,7 +16,6 @@ namespace Tests_EasyScore {
     let factory;
     let easyscore;
     let system;
-    let testButtonHandler;
     let registry;
 
     export function runTest(num: number) {
@@ -23,17 +23,10 @@ namespace Tests_EasyScore {
         factory = new VF.Factory({ renderer: { elementId: "stave", width: 800, height: 400 } });
         easyscore = factory.EasyScore({ throwOnError: true });
         system = factory.System();
-        switch (num) {
-            case 0:
-            default:
-                test0();
-                break;
-            case 1:
-                test1();
-                break;
-            case 2:
-                test2();
-                break;
+        if (isNaN(num) || num < 0 || num >= tests.length) {
+            test0();
+        } else {
+            tests[num]();
         }
         factory.draw();
     }
@@ -44,15 +37,13 @@ namespace Tests_EasyScore {
     // document.querySelector("#vf-note-id-39412 .vf-notehead path").style.fill = "cyan"
     // document.querySelector("#vf-note-id-39412 .vf-modifiers path").style.fill = "magenta"
 
-    const test0: TestFunction = () => {
-        console.log("TEST 0");
+    function test0() {
         system.addStave({
             voices: [easyscore.voice(easyscore.notes("C5/w"))],
         });
-    };
+    }
 
-    const test1: TestFunction = () => {
-        console.log("TEST 1");
+    function test1() {
         system
             .addStave({
                 voices: [easyscore.voice(easyscore.notes("C#5/q, B4, A4, G#4[stem='up',id='note-id-39412']"))],
@@ -66,11 +57,10 @@ namespace Tests_EasyScore {
             })
             .addClef("bass")
             .addTimeSignature("4/4");
-    };
+    }
 
     // Taken from https://raw.githubusercontent.com/0xfe/vexflow/master/tests/bach_tests.js
-    const test2: TestFunction = () => {
-        console.log("TEST 2");
+    function test2() {
         function concat(a, b) {
             return a.concat(b);
         }
@@ -78,7 +68,7 @@ namespace Tests_EasyScore {
         factory = new VF.Factory({ renderer: { elementId: "stave", width: 1150, height: 800 } });
         easyscore = factory.EasyScore({ throwOnError: true });
 
-        var registry = new VF.Registry();
+        registry = new VF.Registry();
         VF.Registry.enableDefaultRegistry(registry);
 
         var v = easyscore.voice.bind(easyscore);
@@ -445,7 +435,8 @@ namespace Tests_EasyScore {
         });
 
         VF.Registry.disableDefaultRegistry();
-    };
+    }
+    test2.description = "Bach Demo";
 }
 
 export default Tests_EasyScore;

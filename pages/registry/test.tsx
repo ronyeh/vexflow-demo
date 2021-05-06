@@ -4,7 +4,6 @@ import App, { Constants } from "app/app";
 import { useEffect } from "react";
 import Tests from "app/tests/Tests_Registry";
 import Spacer from "app/components/Spacer";
-import { useRouter } from "next/router";
 import { GetServerSideProps } from "next";
 
 export default function TestPage({ queryParams }) {

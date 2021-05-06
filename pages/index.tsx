@@ -23,6 +23,11 @@ export default function HomePage() {
                     </Link>
                 </li>
                 <li>
+                    <Link href="/parser">
+                        <a>Parser</a>
+                    </Link>
+                </li>
+                <li>
                     <Link href="/registry">
                         <a>Registry</a>
                     </Link>
