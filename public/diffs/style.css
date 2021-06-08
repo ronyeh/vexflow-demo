@@ -1,14 +1,18 @@
-.term-container {
+body {
     background: #171717;
-    border-radius: 5px;
+}
+
+.outer-wrapper {
+    overflow: scroll;
+}
+
+.term-container {
     color: #999;
-    word-break: break-word;
-    overflow-wrap: break-word;
-    font-family: Hack, Inconsolata, Monaco, 'Roboto Mono', monospace;
+    font-family: Hack, Inconsolata, Monaco, "Roboto Mono", monospace;
     font-size: 15px;
     line-height: 22px;
     padding: 14px 18px;
-    white-space: pre-wrap;
+    white-space: pre;
 }
 
 .term-fg1 {
