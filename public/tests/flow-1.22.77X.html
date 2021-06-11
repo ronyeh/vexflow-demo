@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="flow.css" type="text/css" media="screen" />
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500&display=swap" rel="stylesheet" />
+        <!-- Test Dependencies: jQuery, QUnit -->
+        <link rel="stylesheet" href="support/qunit.css" type="text/css" media="screen" />
+        <script src="support/jquery.js"></script>
+        <script src="support/qunit.js"></script>
+        <script>
+            function loadScript(url) {
+                return new Promise(function (resolve, reject) {
+                    var script = document.createElement("script");
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    script.src = url;
+                    // The utf-8 charset is required for the measureText cache,
+                    // since the index contains weird unicode characters.
+                    script.charset = "utf-8";
+                    document.getElementsByTagName("head")[0].appendChild(script);
+                });
+            }
+
+            $(function () {
+                document.title = "VexFlow.com / 1.22.77X";
+                $("#vex-title").text(document.title);
+                var folder = "ver/1.22.77X/";
+                var vexURL = folder + "vexflow-debug.js";
+                var testsURL = folder + "vexflow-tests.js";
+
+                $("#vex-src").attr("href", vexURL).text("vexflow-debug.js");
+                $("#vex-tests").attr("href", testsURL).text("vexflow-tests.js");
+
+                loadScript(vexURL)
+                    .then(function () {
+                        return loadScript(testsURL);
+                    })
+                    .then(function () {
+                        // Show only failed tests.
+                        QUnit.config.hidepassed = true;
+                        QUnit.config.noglobals = true;
+                        VF.Test.run();
+                    });
+            });
+        </script>
+    </head>
+
+    <body>
+        <div style="text-align: center">
+            <div id="qunit"></div>
+            <div id="qunit-fixture"></div>
+            <h2 id="vex-title"></h2>
+            <div>
+                <h2><a id="vex-src" target="_blank"></a> | <a id="vex-tests" target="_blank"></a></h2>
+            </div>
+            <p>&nbsp;</p>
+            <div id="vexflow_testoutput"></div>
+            <p>&nbsp;</p>
+            <p class="vf-footer">[ <a href="http://vexflow.com">home</a> ] [ <a href="http://github.com/0xfe/vexflow">github</a> ] [ <a href="http://0xfe.muthanna.com">0xfe</a> ]</p>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,1 @@
+icdiff -N -W --cols=260 old_file.js new_file.ts | terminal-to-html -preview > output_file.html
