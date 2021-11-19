@@ -1,1 +1,5 @@
-icdiff -N -W --cols=260 old_file.js new_file.ts | terminal-to-html -preview > output_file.html
+git config --global icdiff.options '--highlight --line-numbers --cols=260'
+
+git icdiff COMMIT_NUMBER:src/ HEAD:src/  |  terminal-to-html -preview > /tmp/icdiffoutput.html
+
+icdiff -N -W --cols=260 old_file.js new_file.ts  |  terminal-to-html -preview > /tmp/icdiffoutput.html

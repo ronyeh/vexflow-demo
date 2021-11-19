@@ -1,0 +1,1 @@
+surge  --domain  vexflow-diffs.surge.sh  public/diffs/
