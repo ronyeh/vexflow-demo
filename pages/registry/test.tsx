@@ -31,13 +31,12 @@ export default function TestPage({ queryParams }) {
                 <script src={vexURL}></script>
             </Head>
             <h1>
-                <Link href="/registry">
-                    <a className="back-button">↖️</a>
+                <Link href="/registry" className="back-button">
+                    ↖️
                 </Link>
                 <Spacer />
                 {title}
             </h1>
-
             <button onClick={onClick}>Click Me</button>
             <br />
             <div className="stave-container">

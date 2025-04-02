@@ -64,8 +64,8 @@ export default function ListOfTests({ vexFiles, testInfo }: Props) {
                 <base href={App.ensureTrailingSlash(router.pathname)} />
             </Head>
             <h1>
-                <Link href="/">
-                    <a className="back-button">↖️</a>
+                <Link href="/" className="back-button">
+                    ↖️
                 </Link>
                 <Spacer />
                 {title}

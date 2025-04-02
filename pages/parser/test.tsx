@@ -25,8 +25,8 @@ export default function TestPage({ queryParams }) {
                 <script src={vexURL}></script>
             </Head>
             <h1>
-                <Link href="/parser">
-                    <a className="back-button">↖️</a>
+                <Link href="/parser" className="back-button">
+                    ↖️
                 </Link>
                 <Spacer />
                 {title}

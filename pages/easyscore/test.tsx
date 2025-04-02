@@ -26,7 +26,7 @@ export default function TestPage({ queryParams }) {
                 <script src={vexURL}></script>
             </Head>
             <h1>
-                <Link href="/easyscore">
+                <Link href="/easyscore" legacyBehavior>
                     <a className="back-button">↖️</a>
                 </Link>
                 <Spacer />

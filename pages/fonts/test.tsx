@@ -34,8 +34,8 @@ export default function TestPage({ queryParams }) {
                 <script src={vexInfo.vexURL}></script>
             </Head>
             <h1>
-                <Link href="/fonts">
-                    <a className="back-button">↖️</a>
+                <Link href="/fonts" className="back-button">
+                    ↖️
                 </Link>
                 <Spacer />
                 {info.title}

@@ -14,22 +14,22 @@ export default function HomePage() {
             <ul>
                 <li>
                     <Link href="/fonts">
-                        <a>Fonts</a>
+                        Fonts
                     </Link>
                 </li>
                 <li>
                     <Link href="/easyscore">
-                        <a>EasyScore</a>
+                        EasyScore
                     </Link>
                 </li>
                 <li>
                     <Link href="/parser">
-                        <a>Parser</a>
+                        Parser
                     </Link>
                 </li>
                 <li>
                     <Link href="/registry">
-                        <a>Registry</a>
+                        Registry
                     </Link>
                 </li>
             </ul>
